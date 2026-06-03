@@ -6,8 +6,8 @@ const int cell_size = 20;
 const int screenwidth = 1200;
 const int screenheight = 800;
 
-int rows = screenwidth/cell_size;
-int cols = screenheight/cell_size;
+int rows = 2000; //screenwidth/cell_size;
+int cols = 2000; //screenheight/cell_size;
 
 vector<vector<int>> grid(rows, vector<int>(cols, false));
 
@@ -66,6 +66,13 @@ int main(){
     Color cellc = {223, 208, 184, 255};
     Color textc = {148, 137, 121, 255};
 
+    Camera2D camera = {0};
+    camera.offset ={screenwidth/2.0f, screenheight/2.0f};
+    camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
+    camera.zoom = 1.0f;
+
+    SetTargetFPS(60);
+
     InitWindow(screenwidth, screenheight, "conway's game of life");
 
     while(!WindowShouldClose()){
@@ -73,11 +80,13 @@ int main(){
 
         ClearBackground(bg);
 
-        for(int i = cell_size; i < screenwidth; i+= cell_size){
-            DrawLine(i, 0, i, screenheight, lines);
+        BeginMode2D(camera);
+
+        for(int i = 0; i < rows*cell_size; i+= cell_size){
+            DrawLine(i, 0, i, cols*cell_size, lines);
         }
-        for(int i = cell_size; i < screenheight; i+= cell_size){
-            DrawLine(0, i, screenwidth, i, lines);
+        for(int i = cell_size; i < cols*cell_size; i+= cell_size){
+            DrawLine(0, i, rows*cell_size, i, lines);
         }
         for(int x = 0; x < rows; x++){
             for(int y = 0; y < cols; y++){
@@ -87,21 +96,45 @@ int main(){
             }
         }
 
-        DrawText(TextFormat("generation: %d", gen), 10, 10, 20, textc);
+        EndMode2D();
+       
+        DrawText(TextFormat("generations: %d", gen), 10, 10, 20, textc);
         DrawText(TextFormat("live cells: %d", live), 10, 30, 20, textc);
-        DrawText(TextFormat("speed: %f", interval), 10, 50, 20, textc);
+        DrawText(TextFormat("speed %.2f", 2-interval), 10, 50, 20, textc);
+
+        EndDrawing();
+
+        live = countCells();
+        wheel = GetMouseWheelMove();
 
         if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
-            Vector2 mouse = GetMousePosition();
+            Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), camera);
             int row = mouse.x/cell_size;
             int col = mouse.y/cell_size;
             if(row >= 0 && row < rows && col >= 0 && col < cols){
                 grid[row][col] = !grid[row][col];
             }
+            gen = 0;
         }
 
-        wheel = GetMouseWheelMove();
-        live = countCells();
+        if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)){
+            Vector2 delta = GetMouseDelta();
+            delta = {delta.x*(-1.0f/camera.zoom), delta.y*(-1.0f/camera.zoom)};
+            camera.target.x += delta.x;
+            camera.target.y += delta.y;
+        }
+
+        if(wheel != 0){
+            Vector2 mouseworldpos = GetScreenToWorld2D(GetMousePosition(), camera);
+            camera.offset = GetMousePosition();
+            camera.target = mouseworldpos;
+            float scale = 0.09f*wheel;
+            float zoomval = expf(logf(camera.zoom)+scale);
+            if(zoomval > 40.0f) zoomval = 40.0f;
+            else if(zoomval < 0.125f) zoomval = 0.125f;
+            camera.zoom = zoomval;
+        
+        }
 
         if(IsKeyPressed(KEY_SPACE)){
             running = !running;
@@ -127,10 +160,21 @@ int main(){
             updateGrid();
         }
 
-        if(wheel){
-            interval -= wheel*0.01f;
-            if(interval < 0.01f) interval = 0.01f;
-            else if(interval > 1.0f) interval = 1.0f;
+        if(IsKeyPressed(KEY_MINUS)){
+            if(interval < 1.0f){
+                if(interval < 0.1f)
+                    interval += 0.01f;
+                else
+                    interval += 0.1f;
+            }
+        }
+
+        if(IsKeyPressed(KEY_EQUAL)){
+            if(interval > 0.01f)
+                if(interval < 0.1f)
+                    interval -= 0.01f;
+                else
+                    interval -= 0.1f;
         }
 
         if(running){
@@ -141,8 +185,6 @@ int main(){
                 timer = 0.0f;
             }
         }
-
-        EndDrawing();
     }
     CloseWindow();
 }
