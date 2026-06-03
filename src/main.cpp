@@ -2,54 +2,63 @@
 #include <raylib.h>
 using namespace std;
 
+struct cell{
+    int x;
+    int y;
+
+    bool operator == (const cell& other) const{
+        return x==other.x && y==other.y;
+    }
+};
+
+struct cell_hash{
+    size_t operator()(const cell& c) const {
+        return std::hash<int>()(c.x) ^ (std::hash<int>()(c.y) << 1);
+    }
+};
+
 const int cell_size = 20;
-const int screenwidth = 1200;
-const int screenheight = 800;
+const int screenw = 1200;
+const int screenh = 800;
 
-int rows = 2000; //screenwidth/cell_size;
-int cols = 2000; //screenheight/cell_size;
+int rows = 2000; //screenw/cell_size;
+int cols = 2000; //screenh/cell_size;
 
-vector<vector<int>> grid(rows, vector<int>(cols, false));
+unordered_set<cell, cell_hash> livecells;
 
-int countNeighbours(int x, int y){
-    int count = 0;
+void countNeighbours(cell c, unordered_map<cell, int, cell_hash> &neighbours){
+    int x = c.x, y = c.y;
     for(int dx = -1; dx <= 1; dx++){
         for(int dy = -1; dy <= 1; dy++){
-            if(dx == 0 && dy == 0) continue;
+            if(!dx && !dy) continue;
             int nx = x+dx, ny = y+dy;
             if(nx >= 0 && nx < rows && ny >= 0 && ny < cols){
-                if(grid[nx][ny])
-                    count++;
+                cell nc; nc.x = nx; nc.y = ny;
+                neighbours[nc]++;
             }
         }
     }
-    return count;
-}
-
-int countCells(){
-    int live = 0;
-    for(int x = 0; x < rows; x++){
-        for(int y = 0; y < cols; y++){
-            if(grid[x][y]) live++;
-        }
-    }
-    return live;
 }
 
 void updateGrid(){
-    auto next = grid;
-    for(int x = 0; x < rows; x++){
-        for(int y = 0; y < cols; y++){
-            int n = countNeighbours(x, y);
-            if(grid[x][y]){
-                next[x][y] = (n==2 || n==3);
-            }
-            else{
-                next[x][y] = (n==3);
-            }
+    unordered_map<cell, int, cell_hash> neighbours;
+    unordered_set<cell, cell_hash> nextlive;
+    for(cell c : livecells){
+        countNeighbours(c, neighbours);
+    }
+    for(auto &[c, n] : neighbours){
+        if(n==2 && livecells.find(c) != livecells.end()){
+            nextlive.emplace(c);
+        }
+        else if(n==3){
+            nextlive.emplace(c);
         }
     }
-    grid = next;
+}
+
+int countCells(){
+    int live = livecells.size();
+    return live;
 }
 
 int main(){
@@ -67,44 +76,52 @@ int main(){
     Color textc = {148, 137, 121, 255};
 
     Camera2D camera = {0};
-    camera.offset ={screenwidth/2.0f, screenheight/2.0f};
+    camera.offset = {screenw/2.0f, screenh/2.0f};
     camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
     camera.zoom = 1.0f;
 
     SetTargetFPS(60);
 
-    InitWindow(screenwidth, screenheight, "conway's game of life");
+    InitWindow(screenw, screenh, "conway's game of life");
 
     while(!WindowShouldClose()){
+
+        Vector2 topleft = GetScreenToWorld2D({0, 0}, camera);
+        Vector2 bottomright = GetScreenToWorld2D({(float)screenw, (float)screenh}, camera);
+
+        int startx = max(0, (int)(topleft.x/cell_size)-1);
+        int endx = min(rows, (int)(bottomright.x/cell_size)+1);
+        int starty = max(0, (int)(topleft.y/cell_size)-1);
+        int endy = min(cols, (int)(bottomright.y/cell_size)+1);
+
         BeginDrawing();
 
         ClearBackground(bg);
 
         BeginMode2D(camera);
 
-        for(int i = 0; i < rows*cell_size; i+= cell_size){
-            DrawLine(i, 0, i, cols*cell_size, lines);
+        for(int i = startx*cell_size; i < endx*cell_size; i += cell_size){
+            DrawLine(i, starty, i, endy*cell_size, lines);
         }
-        for(int i = cell_size; i < cols*cell_size; i+= cell_size){
-            DrawLine(0, i, rows*cell_size, i, lines);
+        for(int i = starty*cell_size; i < endy*cell_size; i += cell_size){
+            DrawLine(startx, i, endx*cell_size, i, lines);
         }
-        for(int x = 0; x < rows; x++){
-            for(int y = 0; y < cols; y++){
-                if(grid[x][y]){
+        for(int x = startx; x < endx; x++){
+            for(int y = starty; y < endy; y++){
+                if(livecells.find({x, y}) != livecells.end()){
                     DrawRectangle(x*cell_size, y*cell_size, cell_size, cell_size, cellc);
                 }
             }
         }
 
         EndMode2D();
-       
+
         DrawText(TextFormat("generations: %d", gen), 10, 10, 20, textc);
         DrawText(TextFormat("live cells: %d", live), 10, 30, 20, textc);
-        DrawText(TextFormat("speed %.2f", 2-interval), 10, 50, 20, textc);
+        DrawText(TextFormat("speed: %.2fx", 2-interval), 10, 50, 20, textc);
 
         EndDrawing();
 
-        live = countCells();
         wheel = GetMouseWheelMove();
 
         if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
@@ -112,9 +129,16 @@ int main(){
             int row = mouse.x/cell_size;
             int col = mouse.y/cell_size;
             if(row >= 0 && row < rows && col >= 0 && col < cols){
-                grid[row][col] = !grid[row][col];
+                cell c = {row, col};
+                if(livecells.find(c) != livecells.end()){
+                    livecells.erase(c);
+                }
+                else{
+                    livecells.emplace(c);
+                }
             }
             gen = 0;
+            live = countCells();
         }
 
         if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)){
@@ -124,7 +148,7 @@ int main(){
             camera.target.y += delta.y;
         }
 
-        if(wheel != 0){
+        if(wheel){
             Vector2 mouseworldpos = GetScreenToWorld2D(GetMousePosition(), camera);
             camera.offset = GetMousePosition();
             camera.target = mouseworldpos;
@@ -133,7 +157,6 @@ int main(){
             if(zoomval > 40.0f) zoomval = 40.0f;
             else if(zoomval < 0.125f) zoomval = 0.125f;
             camera.zoom = zoomval;
-        
         }
 
         if(IsKeyPressed(KEY_SPACE)){
@@ -141,23 +164,27 @@ int main(){
         }
 
         if(IsKeyPressed(KEY_C)){
-            grid = vector<vector<int>>(rows, vector<int>(cols, false));
+            livecells.clear();
             gen = 0;
             live = 0;
         }
 
         if(IsKeyPressed(KEY_R)){
             gen = 0;
-            for(auto &row : grid){
-                for(auto &cell : row){
-                    cell = (GetRandomValue(0, 100) < 20);
+            for(int i = startx; i < endx; i++){
+                for(int j = starty; j < endy; j++){
+                    if(GetRandomValue(0, 100) < 20){
+                        livecells.emplace((cell){i, j});
+                    }
                 }
             }
+            live = countCells();
         }
 
         if(IsKeyPressed(KEY_N)){
             gen++;
             updateGrid();
+            live = countCells();
         }
 
         if(IsKeyPressed(KEY_MINUS)){
@@ -170,11 +197,12 @@ int main(){
         }
 
         if(IsKeyPressed(KEY_EQUAL)){
-            if(interval > 0.01f)
+            if(interval > 0.01f){
                 if(interval < 0.1f)
                     interval -= 0.01f;
                 else
                     interval -= 0.1f;
+            }
         }
 
         if(running){
@@ -182,9 +210,11 @@ int main(){
             if(timer >= interval){
                 updateGrid();
                 gen++;
+                live = countCells();
                 timer = 0.0f;
             }
         }
     }
+
     CloseWindow();
 }
