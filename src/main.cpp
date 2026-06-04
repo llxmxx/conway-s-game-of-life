@@ -32,10 +32,8 @@ void countNeighbours(cell c, unordered_map<cell, int, cell_hash> &neighbours){
         for(int dy = -1; dy <= 1; dy++){
             if(!dx && !dy) continue;
             int nx = x+dx, ny = y+dy;
-            if(nx >= 0 && nx < rows && ny >= 0 && ny < cols){
-                cell nc; nc.x = nx; nc.y = ny;
-                neighbours[nc]++;
-            }
+            cell nc; nc.x = nx; nc.y = ny;
+            neighbours[nc]++;
         }
     }
 }
@@ -54,11 +52,7 @@ void updateGrid(){
             nextlive.emplace(c);
         }
     }
-}
-
-int countCells(){
-    int live = livecells.size();
-    return live;
+    livecells = nextlive;
 }
 
 int main(){
@@ -123,6 +117,7 @@ int main(){
         EndDrawing();
 
         wheel = GetMouseWheelMove();
+        live = livecells.size();
 
         if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
             Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), camera);
@@ -138,7 +133,6 @@ int main(){
                 }
             }
             gen = 0;
-            live = countCells();
         }
 
         if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)){
@@ -152,10 +146,10 @@ int main(){
             Vector2 mouseworldpos = GetScreenToWorld2D(GetMousePosition(), camera);
             camera.offset = GetMousePosition();
             camera.target = mouseworldpos;
-            float scale = 0.09f*wheel;
+            float scale = 0.05f*wheel;
             float zoomval = expf(logf(camera.zoom)+scale);
-            if(zoomval > 40.0f) zoomval = 40.0f;
-            else if(zoomval < 0.125f) zoomval = 0.125f;
+            if(zoomval > 20.0f) zoomval = 20.0f;
+            else if(zoomval < 0.5f) zoomval = 0.5f;
             camera.zoom = zoomval;
         }
 
@@ -167,10 +161,14 @@ int main(){
             livecells.clear();
             gen = 0;
             live = 0;
+            camera.zoom = 1.0f;
+            camera.offset = {screenw/2.0f, screenh/2.0f};
+            camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
         }
 
         if(IsKeyPressed(KEY_R)){
             gen = 0;
+            livecells.clear();
             for(int i = startx; i < endx; i++){
                 for(int j = starty; j < endy; j++){
                     if(GetRandomValue(0, 100) < 20){
@@ -178,13 +176,11 @@ int main(){
                     }
                 }
             }
-            live = countCells();
         }
 
         if(IsKeyPressed(KEY_N)){
             gen++;
             updateGrid();
-            live = countCells();
         }
 
         if(IsKeyPressed(KEY_MINUS)){
@@ -210,7 +206,6 @@ int main(){
             if(timer >= interval){
                 updateGrid();
                 gen++;
-                live = countCells();
                 timer = 0.0f;
             }
         }
