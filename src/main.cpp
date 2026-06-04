@@ -17,12 +17,22 @@ struct cell_hash{
     }
 };
 
+enum tool{
+    brush, erase, rect, line, fill
+};
+
 const int cell_size = 20;
 const int screenw = 1200;
 const int screenh = 800;
 
 int rows = 2000; //screenw/cell_size;
 int cols = 2000; //screenh/cell_size;
+
+
+Color bg = {34, 40, 49, 255};
+Color lines = {57, 62, 70, 255};
+Color cellc = {223, 208, 184, 255};
+Color textc = {148, 137, 121, 255};
 
 unordered_set<cell, cell_hash> livecells;
 
@@ -36,6 +46,12 @@ void countNeighbours(cell c, unordered_map<cell, int, cell_hash> &neighbours){
             neighbours[nc]++;
         }
     }
+}
+
+bool buttonClick(Rectangle rect){
+    Vector2 mouse = GetMousePosition();
+    bool clicked = mouse.x >= rect.x && mouse.x <= rect.x+rect.width && mouse.y >= rect.y && mouse.y <= rect.y+rect.height && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+    return clicked;
 }
 
 void updateGrid(){
@@ -57,6 +73,8 @@ void updateGrid(){
 
 int main(){
     bool running = false;
+    bool isPanelOpen = false;
+    tool currTool = brush;
     float timer = 0.0f;
     float interval = 0.1f;
     float wheel = 0;
@@ -64,15 +82,14 @@ int main(){
     int gen = 0;
     int live = 0;
 
-    Color bg = {34, 40, 49, 255};
-    Color lines = {57, 62, 70, 255};
-    Color cellc = {223, 208, 184, 255};
-    Color textc = {148, 137, 121, 255};
-
     Camera2D camera = {0};
     camera.offset = {screenw/2.0f, screenh/2.0f};
     camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
     camera.zoom = 1.0f;
+
+    Rectangle panelOpen = {screenw-10, screenh-100, 10, 20};
+    Rectangle brushBtn = {screenw-75, 40, 50, 40};
+    Rectangle eraseBtn = {screenw-75, 120, 50, 40};
 
     SetTargetFPS(60);
 
@@ -110,6 +127,16 @@ int main(){
 
         EndMode2D();
 
+        DrawRectangleRec(panelOpen, textc);
+        if(isPanelOpen){
+            DrawText(">", panelOpen.x+1, panelOpen.y, 20, bg);
+            DrawRectangle(screenw-100, 0, 100, screenh, lines);
+            DrawRectangleRec(brushBtn, textc);
+            DrawRectangleRec(eraseBtn, textc);
+        }
+        else{
+            DrawText("<", panelOpen.x+1, panelOpen.y, 20, bg);
+        }
         DrawText(TextFormat("generations: %d", gen), 10, 10, 20, textc);
         DrawText(TextFormat("live cells: %d", live), 10, 30, 20, textc);
         DrawText(TextFormat("speed: %.2fx", 2-interval), 10, 50, 20, textc);
@@ -120,19 +147,32 @@ int main(){
         live = livecells.size();
 
         if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
-            Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), camera);
-            int row = mouse.x/cell_size;
-            int col = mouse.y/cell_size;
-            if(row >= 0 && row < rows && col >= 0 && col < cols){
-                cell c = {row, col};
-                if(livecells.find(c) != livecells.end()){
-                    livecells.erase(c);
+            bool used = false;
+            if(buttonClick(panelOpen)){
+                isPanelOpen = !isPanelOpen;
+                used = true;
+            }
+            else if(isPanelOpen){
+                if(buttonClick(brushBtn)){
+                    currTool = brush;
+                    used = true;
                 }
-                else{
-                    livecells.emplace(c);
+                else if(buttonClick(eraseBtn)){
+                    currTool = erase;
+                    used = true;
                 }
             }
-            gen = 0;
+            if(!used){
+                Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), camera);
+                int row = mouse.x/cell_size;
+                int col = mouse.y/cell_size;
+                if(row >= 0 && row < rows && col >= 0 && col < cols){
+                    cell c = {row, col};
+                    if(currTool == brush) livecells.emplace(c);
+                    else if(currTool == erase) livecells.erase(c);
+                }
+                gen = 0;
+            }
         }
 
         if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)){
