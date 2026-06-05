@@ -87,6 +87,7 @@ int main(){
     camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
     camera.zoom = 1.0f;
 
+    Rectangle panel = {screenw-100, 0, 100, screenh};
     Rectangle panelOpen = {screenw-10, screenh-100, 10, 20};
     Rectangle brushBtn = {screenw-75, 40, 50, 40};
     Rectangle eraseBtn = {screenw-75, 120, 50, 40};
@@ -127,14 +128,15 @@ int main(){
 
         EndMode2D();
 
-        DrawRectangleRec(panelOpen, textc);
         if(isPanelOpen){
+            DrawRectangleRec(panel, lines);
+            DrawRectangleRec(panelOpen, textc);
             DrawText(">", panelOpen.x+1, panelOpen.y, 20, bg);
-            DrawRectangle(screenw-100, 0, 100, screenh, lines);
             DrawRectangleRec(brushBtn, textc);
             DrawRectangleRec(eraseBtn, textc);
         }
         else{
+            DrawRectangleRec(panelOpen, textc);
             DrawText("<", panelOpen.x+1, panelOpen.y, 20, bg);
         }
         DrawText(TextFormat("generations: %d", gen), 10, 10, 20, textc);
@@ -162,7 +164,7 @@ int main(){
                     used = true;
                 }
             }
-            if(!used){
+            if(!used && (!isPanelOpen || !buttonClick(panel))){
                 Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), camera);
                 int row = mouse.x/cell_size;
                 int col = mouse.y/cell_size;
@@ -170,6 +172,20 @@ int main(){
                     cell c = {row, col};
                     if(currTool == brush) livecells.emplace(c);
                     else if(currTool == erase) livecells.erase(c);
+                }
+                gen = 0;
+            }
+        }
+
+        if(IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)){
+            if(!isPanelOpen || !buttonClick(panel)){
+                Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), camera);
+                int row = mouse.x/cell_size;
+                int col = mouse.y/cell_size;
+                if(row >= 0 && row < rows && col >= 0 && col < cols){
+                    cell c = {row, col};
+                    if(currTool == brush) livecells.erase(c);
+                    else if(currTool == erase) livecells.emplace(c);
                 }
                 gen = 0;
             }
