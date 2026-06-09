@@ -18,7 +18,7 @@ struct cell_hash{
 };
 
 enum tool{
-    brush, erase, rect, line, fil
+    brush, erase, rect, line
 };
 
 const int cell_size = 20;
@@ -101,7 +101,6 @@ int main(){
     Rectangle eraseBtn = {screenw-75, 120, 50, 40};
     Rectangle rectBtn = {screenw-75, 200, 50, 40};
     Rectangle lineBtn = {screenw-75, 280, 50, 40};
-    Rectangle filBtn = {screenw-75, 360, 50, 40};
 
     cell startc, endc;
 
@@ -149,7 +148,6 @@ int main(){
             DrawRectangleRec(eraseBtn, textc);
             DrawRectangleRec(rectBtn, textc);
             DrawRectangleRec(lineBtn, textc);
-            DrawRectangleRec(filBtn, textc);
         }
         else{
             DrawRectangleRec(panelOpen, textc);
@@ -187,18 +185,12 @@ int main(){
                     currTool = line;
                     used = true;
                 }
-                else if(buttonClick(filBtn)){
-                    currTool = fil;
-                    used = true;
-                }
             }
             if(!used && (!isPanelOpen || !buttonClick(panel))){
                 gen = 0;
+                dragging = true;
                 if(currTool == rect || currTool == line){
                     startc = getCell();
-                }
-                else{
-                    dragging = true;
                 }
             }
         }
@@ -215,19 +207,35 @@ int main(){
             }
         }
 
-        if(IsMouseButtonReleased(MOUSE_LEFT_BUTTON)){
-            dragging = false;
+        if(IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && dragging){
             endc = getCell();
+            int startx = min(startc.x, endc.x), endx = max(startc.x, endc.x);
+            int starty = min(startc.y, endc.y), endy = max(startc.y, endc.y);
             switch(currTool){
                 case rect:
-                for(int x = min(startc.x, endc.x); x <= max(startc.x, endc.x); x++){
-                    for(int y = min(startc.y, endc.y); y <= max(startc.y, endc.y); y++){
+                for(int x = startx; x <= endx; x++){
+                    for(int y = starty; y <= endy; y++){
                         cell c = {x, y};
                         livecells.emplace(c);
                     }
                 }
                 break;
+                case line:
+                cout << startc.x << "," << startc.y << endl;
+                cout << endc.x << "," << endc.y << endl;
+                float dx = startc.x - endc.x, dy = startc.y - endc.y;
+                int steps = max(abs(dx), abs(dy));
+                if (steps == 0) break;
+                dx /= steps;
+                dy /= steps;
+                for(int i = 0; i < steps; i++){
+                    float x = startx-dx*i, y = starty-dy*i;
+                    cell c = {(int)round(x), (int)round(y)};
+                    livecells.emplace(c);
+                }
+                break;
             }
+            dragging = false;
         }
 
         if(IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)){
