@@ -18,7 +18,7 @@ struct cell_hash{
 };
 
 enum tool{
-    brush, erase, rect, line, fill
+    brush, erase, rect, line, fil
 };
 
 const int cell_size = 20;
@@ -28,13 +28,14 @@ const int screenh = 800;
 int rows = 2000; //screenw/cell_size;
 int cols = 2000; //screenh/cell_size;
 
-
 Color bg = {34, 40, 49, 255};
 Color lines = {57, 62, 70, 255};
 Color cellc = {223, 208, 184, 255};
 Color textc = {148, 137, 121, 255};
 
 unordered_set<cell, cell_hash> livecells;
+
+Camera2D camera = {0};
 
 void countNeighbours(cell c, unordered_map<cell, int, cell_hash> &neighbours){
     int x = c.x, y = c.y;
@@ -71,9 +72,17 @@ void updateGrid(){
     livecells = nextlive;
 }
 
+cell getCell(){
+    Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), camera);
+    int row = mouse.x/cell_size;
+    int col = mouse.y/cell_size;
+    return {row, col};
+}
+
 int main(){
     bool running = false;
     bool isPanelOpen = false;
+    bool dragging = false;
     tool currTool = brush;
     float timer = 0.0f;
     float interval = 0.1f;
@@ -82,7 +91,6 @@ int main(){
     int gen = 0;
     int live = 0;
 
-    Camera2D camera = {0};
     camera.offset = {screenw/2.0f, screenh/2.0f};
     camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
     camera.zoom = 1.0f;
@@ -91,6 +99,11 @@ int main(){
     Rectangle panelOpen = {screenw-10, screenh-100, 10, 20};
     Rectangle brushBtn = {screenw-75, 40, 50, 40};
     Rectangle eraseBtn = {screenw-75, 120, 50, 40};
+    Rectangle rectBtn = {screenw-75, 200, 50, 40};
+    Rectangle lineBtn = {screenw-75, 280, 50, 40};
+    Rectangle filBtn = {screenw-75, 360, 50, 40};
+
+    cell startc, endc;
 
     SetTargetFPS(60);
 
@@ -134,6 +147,9 @@ int main(){
             DrawText(">", panelOpen.x+1, panelOpen.y, 20, bg);
             DrawRectangleRec(brushBtn, textc);
             DrawRectangleRec(eraseBtn, textc);
+            DrawRectangleRec(rectBtn, textc);
+            DrawRectangleRec(lineBtn, textc);
+            DrawRectangleRec(filBtn, textc);
         }
         else{
             DrawRectangleRec(panelOpen, textc);
@@ -163,17 +179,54 @@ int main(){
                     currTool = erase;
                     used = true;
                 }
+                else if(buttonClick(rectBtn)){
+                    currTool = rect;
+                    used = true;
+                }
+                else if(buttonClick(lineBtn)){
+                    currTool = line;
+                    used = true;
+                }
+                else if(buttonClick(filBtn)){
+                    currTool = fil;
+                    used = true;
+                }
             }
             if(!used && (!isPanelOpen || !buttonClick(panel))){
-                Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), camera);
-                int row = mouse.x/cell_size;
-                int col = mouse.y/cell_size;
-                if(row >= 0 && row < rows && col >= 0 && col < cols){
-                    cell c = {row, col};
-                    if(currTool == brush) livecells.emplace(c);
-                    else if(currTool == erase) livecells.erase(c);
-                }
                 gen = 0;
+                if(currTool == rect || currTool == line){
+                    startc = getCell();
+                }
+                else{
+                    dragging = true;
+                }
+            }
+        }
+
+        if(dragging){
+            cell c = getCell();
+            switch(currTool){
+                case brush:
+                livecells.emplace(c);
+                break;
+                case erase:
+                livecells.erase(c);
+                break;
+            }
+        }
+
+        if(IsMouseButtonReleased(MOUSE_LEFT_BUTTON)){
+            dragging = false;
+            endc = getCell();
+            switch(currTool){
+                case rect:
+                for(int x = min(startc.x, endc.x); x <= max(startc.x, endc.x); x++){
+                    for(int y = min(startc.y, endc.y); y <= max(startc.y, endc.y); y++){
+                        cell c = {x, y};
+                        livecells.emplace(c);
+                    }
+                }
+                break;
             }
         }
 
