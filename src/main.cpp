@@ -97,10 +97,10 @@ int main(){
 
     Rectangle panel = {screenw-100, 0, 100, screenh};
     Rectangle panelOpen = {screenw-10, screenh-100, 10, 20};
-    Rectangle brushBtn = {screenw-75, 40, 50, 40};
-    Rectangle eraseBtn = {screenw-75, 120, 50, 40};
-    Rectangle rectBtn = {screenw-75, 200, 50, 40};
-    Rectangle lineBtn = {screenw-75, 280, 50, 40};
+    Rectangle brushBtn = {screenw-80, 40, 60, 40};
+    Rectangle eraseBtn = {screenw-80, 120, 60, 40};
+    Rectangle rectBtn = {screenw-80, 200, 60, 40};
+    Rectangle lineBtn = {screenw-80, 280, 60, 40};
 
     cell startc, endc;
 
@@ -145,9 +145,13 @@ int main(){
             DrawRectangleRec(panelOpen, textc);
             DrawText(">", panelOpen.x+1, panelOpen.y, 20, bg);
             DrawRectangleRec(brushBtn, textc);
+            DrawText("brush", brushBtn.x+1, brushBtn.y+8, 20, bg);
             DrawRectangleRec(eraseBtn, textc);
+            DrawText("erase", eraseBtn.x+1, eraseBtn.y+8, 20, bg);
             DrawRectangleRec(rectBtn, textc);
+            DrawText("rect", rectBtn.x+8, rectBtn.y+8, 20, bg);
             DrawRectangleRec(lineBtn, textc);
+            DrawText("line", lineBtn.x+12, lineBtn.y+8, 20, bg);
         }
         else{
             DrawRectangleRec(panelOpen, textc);
