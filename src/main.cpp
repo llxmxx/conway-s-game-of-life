@@ -21,6 +21,10 @@ enum tool{
     brush, erase, rect, line
 };
 
+enum panels{
+    def, tools, patterns
+};
+
 const int cell_size = 20;
 const int screenw = 1200;
 const int screenh = 800;
@@ -84,6 +88,7 @@ int main(){
     bool isPanelOpen = false;
     bool dragging = false;
     tool currTool = brush;
+    panels currPanel = def;
     float timer = 0.0f;
     float interval = 0.1f;
     float wheel = 0;
@@ -96,11 +101,15 @@ int main(){
     camera.zoom = 1.0f;
 
     Rectangle panel = {screenw-100, 0, 100, screenh};
-    Rectangle panelOpen = {screenw-10, screenh-100, 10, 20};
-    Rectangle brushBtn = {screenw-80, 40, 60, 40};
-    Rectangle eraseBtn = {screenw-80, 120, 60, 40};
-    Rectangle rectBtn = {screenw-80, 200, 60, 40};
-    Rectangle lineBtn = {screenw-80, 280, 60, 40};
+    Rectangle panelBtn = {screenw-10, screenh-100, 10, 20};
+    Rectangle btn1 = {screenw-85, 40, 70, 40};
+    Rectangle btn2 = {screenw-85, 120, 70, 40};
+    Rectangle btn3 = {screenw-85, 200, 70, 40};
+    Rectangle btn4 = {screenw-85, 280, 70, 40};
+    Rectangle btn5 = {screenw-85, 360, 70, 40};
+    Rectangle btn6 = {screenw-85, 420, 70, 40};
+    Rectangle btn7 = {screenw-85, 500, 70, 40};
+    Rectangle btn8 = {screenw-85, 580, 70, 40};
 
     cell startc, endc;
 
@@ -142,20 +151,35 @@ int main(){
 
         if(isPanelOpen){
             DrawRectangleRec(panel, lines);
-            DrawRectangleRec(panelOpen, textc);
-            DrawText(">", panelOpen.x+1, panelOpen.y, 20, bg);
-            DrawRectangleRec(brushBtn, textc);
-            DrawText("brush", brushBtn.x+1, brushBtn.y+8, 20, bg);
-            DrawRectangleRec(eraseBtn, textc);
-            DrawText("erase", eraseBtn.x+1, eraseBtn.y+8, 20, bg);
-            DrawRectangleRec(rectBtn, textc);
-            DrawText("rect", rectBtn.x+8, rectBtn.y+8, 20, bg);
-            DrawRectangleRec(lineBtn, textc);
-            DrawText("line", lineBtn.x+12, lineBtn.y+8, 20, bg);
+            DrawRectangleRec(panelBtn, textc);
+            DrawText(">", panelBtn.x+1, panelBtn.y, 20, bg);
+            switch(currPanel){
+                case def:
+                DrawRectangleRec(btn1, textc);
+                DrawText("tools", btn1.x+8, btn1.y+8, 20, bg);
+                DrawRectangleRec(btn2, textc);
+                DrawText("patterns", btn2.x+1, btn2.y+8, 15, bg);
+                break;
+                case tools:
+                DrawRectangleRec(btn1, textc);
+                DrawText("brush", btn1.x+1, btn1.y+8, 20, bg);
+                DrawRectangleRec(btn2, textc);
+                DrawText("erase", btn2.x+1, btn2.y+8, 20, bg);
+                DrawRectangleRec(btn3, textc);
+                DrawText("rect", btn3.x+8, btn3.y+8, 20, bg);
+                DrawRectangleRec(btn4, textc);
+                DrawText("line", btn4.x+12, btn4.y+8, 20, bg);
+                DrawRectangleRec(btn8, textc);
+                DrawText("back", btn8.x+8, btn8.y+8, 20, bg);
+                break;
+                case patterns:
+                DrawRectangleRec(btn8, textc);
+                DrawText("back", btn8.x+8, btn8.y+8, 20, bg);
+            }
         }
         else{
-            DrawRectangleRec(panelOpen, textc);
-            DrawText("<", panelOpen.x+1, panelOpen.y, 20, bg);
+            DrawRectangleRec(panelBtn, textc);
+            DrawText("<", panelBtn.x+1, panelBtn.y, 20, bg);
         }
         DrawText(TextFormat("generations: %d", gen), 10, 10, 20, textc);
         DrawText(TextFormat("live cells: %d", live), 10, 30, 20, textc);
@@ -168,30 +192,53 @@ int main(){
 
         if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
             bool used = false;
-            if(buttonClick(panelOpen)){
+            if(buttonClick(panelBtn)){
                 isPanelOpen = !isPanelOpen;
                 used = true;
             }
             else if(isPanelOpen){
-                if(buttonClick(brushBtn)){
-                    currTool = brush;
-                    used = true;
+                switch(currPanel){
+                    case def:
+                    if(buttonClick(btn1)){
+                        currPanel = tools;
+                        used = true;
+                    }
+                    if(buttonClick(btn2)){
+                        currPanel = patterns;
+                        used = true;
+                    }
+                    break;
+                    case tools:
+                    if(buttonClick(btn1)){
+                        currTool = brush;
+                        used = true;
+                    }
+                    else if(buttonClick(btn2)){
+                        currTool = erase;
+                        used = true;
+                    }
+                    else if(buttonClick(btn3)){
+                        currTool = rect;
+                        used = true;
+                    }
+                    else if(buttonClick(btn4)){
+                        currTool = line;
+                        used = true;
+                    }
+                    else if(buttonClick(btn8)){
+                        currPanel = def;
+                        used = true;
+                    }
+                    break;
+                    case patterns:
+                    if(buttonClick(btn8)){
+                        currPanel = def;
+                        used = true;
+                    }
                 }
-                else if(buttonClick(eraseBtn)){
-                    currTool = erase;
-                    used = true;
-                }
-                else if(buttonClick(rectBtn)){
-                    currTool = rect;
-                    used = true;
-                }
-                else if(buttonClick(lineBtn)){
-                    currTool = line;
-                    used = true;
-                }
+                
             }
             if(!used && (!isPanelOpen || !buttonClick(panel))){
-                gen = 0;
                 dragging = true;
                 if(currTool == rect || currTool == line){
                     startc = getCell();
@@ -200,6 +247,7 @@ int main(){
         }
 
         if(dragging){
+            gen = 0;
             cell c = getCell();
             switch(currTool){
                 case brush:
@@ -213,27 +261,23 @@ int main(){
 
         if(IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && dragging){
             endc = getCell();
-            int startx = min(startc.x, endc.x), endx = max(startc.x, endc.x);
-            int starty = min(startc.y, endc.y), endy = max(startc.y, endc.y);
             switch(currTool){
                 case rect:
-                for(int x = startx; x <= endx; x++){
-                    for(int y = starty; y <= endy; y++){
+                for(int x = min(startc.x, endc.x); x <= max(startc.x, endc.x); x++){
+                    for(int y = min(startc.y, endc.y); y <= max(startc.y, endc.y); y++){
                         cell c = {x, y};
                         livecells.emplace(c);
                     }
                 }
                 break;
                 case line:
-                cout << startc.x << "," << startc.y << endl;
-                cout << endc.x << "," << endc.y << endl;
                 float dx = startc.x - endc.x, dy = startc.y - endc.y;
                 int steps = max(abs(dx), abs(dy));
                 if (steps == 0) break;
                 dx /= steps;
                 dy /= steps;
-                for(int i = 0; i < steps; i++){
-                    float x = startx-dx*i, y = starty-dy*i;
+                for(int i = 0; i < abs(steps); i++){
+                    float x = startc.x-dx*i, y = startc.y-dy*i;
                     cell c = {(int)round(x), (int)round(y)};
                     livecells.emplace(c);
                 }
@@ -249,8 +293,8 @@ int main(){
                 int col = mouse.y/cell_size;
                 if(row >= 0 && row < rows && col >= 0 && col < cols){
                     cell c = {row, col};
-                    if(currTool == brush) livecells.erase(c);
-                    else if(currTool == erase) livecells.emplace(c);
+                    if(currTool == erase) livecells.emplace(c);
+                    else livecells.erase(c);
                 }
                 gen = 0;
             }
