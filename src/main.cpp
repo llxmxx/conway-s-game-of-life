@@ -25,6 +25,10 @@ enum panels{
     def, tools, patterns
 };
 
+enum pattern{
+    nor, glider, lwss, mwss, hwss, gosper, pulsar, pdthlon, acorn, rpento
+};
+
 const int cell_size = 20;
 const int screenw = 1200;
 const int screenh = 800;
@@ -36,6 +40,14 @@ Color bg = {34, 40, 49, 255};
 Color lines = {57, 62, 70, 255};
 Color cellc = {223, 208, 184, 255};
 Color textc = {148, 137, 121, 255};
+
+map<pattern, vector<cell>> pat = {
+    {glider, {{0, -1}, {1, 0}, {-1, 1}, {0, 1}, {1, 1}}},
+    {lwss, {{-2, -2}, {1, -2}, {2, -1}, {-2, 0}, {2, 0}, {-1, 1}, {0, 1}, {1, 1}, {2, 1}}},
+    {mwss, {{-2, -2}, {-1, -2}, {0, -2}, {-3, -1}, {-2, -1}, {-1, -1}, {0, -1}, {1, -1}, {-3, 0}, {-2, 0}, {-1, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}}},
+    {hwss, {{0, -1}, {1, -1}, {-4, 0}, {-3, 0}, {-2, 0}, {-1, 0}, {1, 0}, {2, 0}, {-4, 1}, {-3, 1}, {-2, 1}, {-1, 1}, {0, 1}, {1, 1}, {-3, 2}, {-2, 2}, {-1, 2}, {0, 2}}},
+    {gosper, {{6, -4}, {4, -3}, {6, -3}, {-6, -2}, {-5, -2}, {2, -2}, {3, -2}, {16, -2}, {17, -2}, {-7, -1}, {-3, -1}, {2, -1}, {3, -1}, {16, -1}, {17, -1}, {-18, 0}, {-17, 0}, {-8, 0}, {-2, 0}, {2, 0}, {3, 0}, {-18, 1}, {-17, 1}, {-8, 1}, {-4, 1}, {-2, 1}, {-1, 1}, {4, 1}, {6, 1}, {-8, 2}, {-2, 2}, {6, 2}, {-7, 3}, {-3, 3}, {-6, 4}, {-5, 4}}}
+};
 
 unordered_set<cell, cell_hash> livecells;
 
@@ -89,6 +101,7 @@ int main(){
     bool dragging = false;
     tool currTool = brush;
     panels currPanel = def;
+    pattern currPattern = nor;
     float timer = 0.0f;
     float interval = 0.1f;
     float wheel = 0;
@@ -102,14 +115,17 @@ int main(){
 
     Rectangle panel = {screenw-100, 0, 100, screenh};
     Rectangle panelBtn = {screenw-10, screenh-100, 10, 20};
-    Rectangle btn1 = {screenw-85, 40, 70, 40};
-    Rectangle btn2 = {screenw-85, 120, 70, 40};
-    Rectangle btn3 = {screenw-85, 200, 70, 40};
-    Rectangle btn4 = {screenw-85, 280, 70, 40};
-    Rectangle btn5 = {screenw-85, 360, 70, 40};
-    Rectangle btn6 = {screenw-85, 420, 70, 40};
-    Rectangle btn7 = {screenw-85, 500, 70, 40};
-    Rectangle btn8 = {screenw-85, 580, 70, 40};
+    Rectangle btn1 = {screenw-85, 30, 70, 30};
+    Rectangle btn2 = {screenw-85, 100, 70, 30};
+    Rectangle btn3 = {screenw-85, 170, 70, 30};
+    Rectangle btn4 = {screenw-85, 240, 70, 30};
+    Rectangle btn5 = {screenw-85, 310, 70, 30};
+    Rectangle btn6 = {screenw-85, 380, 70, 30};
+    Rectangle btn7 = {screenw-85, 450, 70, 30};
+    Rectangle btn8 = {screenw-85, 520, 70, 30};
+    Rectangle btn9 = {screenw-85, 590, 70, 30};
+    Rectangle btn10 = {screenw-85, 660, 70, 30};
+    Rectangle btn11 = {screenw-85, 730, 70, 30};
 
     cell startc, endc;
 
@@ -169,12 +185,20 @@ int main(){
                 DrawText("rect", btn3.x+8, btn3.y+8, 20, bg);
                 DrawRectangleRec(btn4, textc);
                 DrawText("line", btn4.x+12, btn4.y+8, 20, bg);
-                DrawRectangleRec(btn8, textc);
-                DrawText("back", btn8.x+8, btn8.y+8, 20, bg);
+                DrawRectangleRec(btn11, textc);
+                DrawText("back", btn11.x+8, btn11.y+8, 20, bg);
                 break;
                 case patterns:
-                DrawRectangleRec(btn8, textc);
-                DrawText("back", btn8.x+8, btn8.y+8, 20, bg);
+                DrawRectangleRec(btn1, textc);
+                DrawRectangleRec(btn2, textc);
+                DrawText("glider", btn2.x, btn2.y+8, 20, bg);
+                DrawRectangleRec(btn3, textc);
+                DrawText("lwss", btn3.x+1, btn3.y+8, 20, bg);
+                DrawRectangleRec(btn4, textc);
+                DrawRectangleRec(btn5, textc);
+                DrawRectangleRec(btn6, textc);
+                DrawRectangleRec(btn11, textc);
+                DrawText("back", btn11.x+8, btn11.y+8, 20, bg);
             }
         }
         else{
@@ -225,23 +249,55 @@ int main(){
                         currTool = line;
                         used = true;
                     }
-                    else if(buttonClick(btn8)){
+                    else if(buttonClick(btn11)){
                         currPanel = def;
                         used = true;
                     }
                     break;
                     case patterns:
-                    if(buttonClick(btn8)){
+                    if(buttonClick(btn1)){
+                        currPattern = nor;
+                        used = true;
+                    }
+                    else if(buttonClick(btn2)){
+                        currPattern = glider;
+                        used = true;
+                    }
+                    else if(buttonClick(btn3)){
+                        currPattern = lwss;
+                        used = true;
+                    }
+                    else if(buttonClick(btn4)){
+                        currPattern = mwss;
+                        used = true;
+                    }
+                    else if(buttonClick(btn5)){
+                        currPattern = hwss;
+                        used = true;
+                    }
+                    else if(buttonClick(btn6)){
+                        currPattern = gosper;
+                        used = true;
+                    }
+                    else if(buttonClick(btn11)){
                         currPanel = def;
                         used = true;
                     }
                 }
-                
             }
             if(!used && (!isPanelOpen || !buttonClick(panel))){
                 dragging = true;
                 if(currTool == rect || currTool == line){
                     startc = getCell();
+                }
+                else if(currPattern != nor){
+                    dragging = false;
+                    cell c = getCell();
+                    int n = pat[currPattern].size();
+                    for(int i = 0; i < n; i++){
+                        cell nc = {c.x+pat[currPattern][i].x, c.y+pat[currPattern][i].y};
+                        livecells.emplace(nc);
+                    }
                 }
             }
         }
