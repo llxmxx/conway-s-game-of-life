@@ -46,7 +46,11 @@ map<pattern, vector<cell>> pat = {
     {lwss, {{-2, -2}, {1, -2}, {2, -1}, {-2, 0}, {2, 0}, {-1, 1}, {0, 1}, {1, 1}, {2, 1}}},
     {mwss, {{-2, -2}, {-1, -2}, {0, -2}, {-3, -1}, {-2, -1}, {-1, -1}, {0, -1}, {1, -1}, {-3, 0}, {-2, 0}, {-1, 0}, {1, 0}, {2, 0}, {0, 1}, {1, 1}}},
     {hwss, {{0, -1}, {1, -1}, {-4, 0}, {-3, 0}, {-2, 0}, {-1, 0}, {1, 0}, {2, 0}, {-4, 1}, {-3, 1}, {-2, 1}, {-1, 1}, {0, 1}, {1, 1}, {-3, 2}, {-2, 2}, {-1, 2}, {0, 2}}},
-    {gosper, {{6, -4}, {4, -3}, {6, -3}, {-6, -2}, {-5, -2}, {2, -2}, {3, -2}, {16, -2}, {17, -2}, {-7, -1}, {-3, -1}, {2, -1}, {3, -1}, {16, -1}, {17, -1}, {-18, 0}, {-17, 0}, {-8, 0}, {-2, 0}, {2, 0}, {3, 0}, {-18, 1}, {-17, 1}, {-8, 1}, {-4, 1}, {-2, 1}, {-1, 1}, {4, 1}, {6, 1}, {-8, 2}, {-2, 2}, {6, 2}, {-7, 3}, {-3, 3}, {-6, 4}, {-5, 4}}}
+    {gosper, {{6, -4}, {4, -3}, {6, -3}, {-6, -2}, {-5, -2}, {2, -2}, {3, -2}, {16, -2}, {17, -2}, {-7, -1}, {-3, -1}, {2, -1}, {3, -1}, {16, -1}, {17, -1}, {-18, 0}, {-17, 0}, {-8, 0}, {-2, 0}, {2, 0}, {3, 0}, {-18, 1}, {-17, 1}, {-8, 1}, {-4, 1}, {-2, 1}, {-1, 1}, {4, 1}, {6, 1}, {-8, 2}, {-2, 2}, {6, 2}, {-7, 3}, {-3, 3}, {-6, 4}, {-5, 4}}},
+    {pulsar, {{-4, -6}, {-3, -6}, {-2, -6}, {2, -6}, {3, -6}, {4, -6}, {-6, -4}, {-1, -4}, {1, -4}, {6, -4}, {-6, -3}, {-1, -3}, {1, -3}, {6, -3}, {-6, -2}, {-1, -2}, {1, -2}, {6, -2}, {-4, -1}, {-3, -1}, {-2, -1}, {2, -1}, {3, -1}, {4, -1}, {-4, 1}, {-3, 1}, {-2, 1}, {2, 1}, {3, 1}, {4, 1}, {-6, 2}, {-1, 2}, {1, 2}, {6, 2}, {-6, 3}, {-1, 3}, {1, 3}, {6, 3}, {-6, 4}, {-1, 4}, {1, 4}, {6, 4}, {-4, 6}, {-3, 6}, {-2, 6}, {2, 6}, {3, 6}, {4, 6}}},
+    {pdthlon, {{-2, -1}, {3, -1}, {-4, 0}, {-3, 0}, {-1, 0}, {0, 0}, {1, 0}, {2, 0}, {4, 0}, {5, 0}, {-2, 1}, {3, 1}}},
+    {acorn, {{-2, -2}, {0, -1}, {-3, 0}, {-2, 0}, {1, 0}, {2, 0}, {3, 0}}},
+    {rpento, {{0, -1}, {1, -1}, {-1, 0}, {0, 0}, {0, 1}}}
 };
 
 unordered_set<cell, cell_hash> livecells;
@@ -190,13 +194,25 @@ int main(){
                 break;
                 case patterns:
                 DrawRectangleRec(btn1, textc);
+                DrawText("normal", btn1.x, btn1.y+8, 20, bg);
                 DrawRectangleRec(btn2, textc);
                 DrawText("glider", btn2.x, btn2.y+8, 20, bg);
                 DrawRectangleRec(btn3, textc);
                 DrawText("lwss", btn3.x+1, btn3.y+8, 20, bg);
                 DrawRectangleRec(btn4, textc);
+                DrawText("mwss", btn4.x+1, btn4.y+8, 20, bg);
                 DrawRectangleRec(btn5, textc);
+                DrawText("hwss", btn5.x+1, btn5.y+8, 20, bg);
                 DrawRectangleRec(btn6, textc);
+                DrawText("gosper", btn6.x, btn6.y+8, 20, bg);
+                DrawRectangleRec(btn7, textc);
+                DrawText("pulsar", btn7.x, btn7.y+8, 20, bg);
+                DrawRectangleRec(btn8, textc);
+                DrawText("pdthlon", btn8.x, btn8.y+8, 20, bg);
+                DrawRectangleRec(btn9, textc);
+                DrawText("acorn", btn9.x, btn9.y+8, 20, bg);
+                DrawRectangleRec(btn10, textc);
+                DrawText("rpento", btn10.x, btn10.y+8, 20, bg);
                 DrawRectangleRec(btn11, textc);
                 DrawText("back", btn11.x+8, btn11.y+8, 20, bg);
             }
@@ -277,6 +293,22 @@ int main(){
                     }
                     else if(buttonClick(btn6)){
                         currPattern = gosper;
+                        used = true;
+                    }
+                    else if(buttonClick(btn7)){
+                        currPattern = pulsar;
+                        used = true;
+                    }
+                    else if(buttonClick(btn8)){
+                        currPattern = pdthlon;
+                        used = true;
+                    }
+                    else if(buttonClick(btn9)){
+                        currPattern = acorn;
+                        used = true;
+                    }
+                    else if(buttonClick(btn10)){
+                        currPattern = rpento;
                         used = true;
                     }
                     else if(buttonClick(btn11)){
