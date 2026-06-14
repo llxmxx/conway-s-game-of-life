@@ -22,7 +22,7 @@ enum tool{
 };
 
 enum panels{
-    def, tools, patterns
+    def, tools, patterns, stats
 };
 
 enum pattern{
@@ -53,9 +53,26 @@ map<pattern, vector<cell>> pat = {
     {rpento, {{0, -1}, {1, -1}, {-1, 0}, {0, 0}, {0, 1}}}
 };
 
+int gen;
+int live;
+int peak;
+int total;
+int minx, maxx;
+int miny, maxy;
+
 unordered_set<cell, cell_hash> livecells;
 
 Camera2D camera = {0};
+
+void checkBounds(){
+    for(cell c : livecells){
+        int x = c.x, y = c.y;
+        if (x < minx) minx = x;
+        else if(x > maxx) maxx = x;
+        if(y < miny) miny = y;
+        else if(y > maxy) maxy = y;
+    }
+}
 
 void countNeighbours(cell c, unordered_map<cell, int, cell_hash> &neighbours){
     int x = c.x, y = c.y;
@@ -99,7 +116,20 @@ cell getCell(){
     return {row, col};
 }
 
+void reset(){
+    livecells.clear();
+    gen = 0;
+    live = 0;
+    minx = 4e6;
+    maxx = -4e6;
+    miny = 4e6;
+    maxx = -4e6;
+    total = 0;
+}
+
 int main(){
+    reset();
+
     bool running = false;
     bool isPanelOpen = false;
     bool dragging = false;
@@ -110,14 +140,11 @@ int main(){
     float interval = 0.1f;
     float wheel = 0;
 
-    int gen = 0;
-    int live = 0;
-
     camera.offset = {screenw/2.0f, screenh/2.0f};
     camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
     camera.zoom = 1.0f;
 
-    Rectangle panel = {screenw-100, 0, 100, screenh};
+    Rectangle panel = {screenw-175, 0, 175, screenh};
     Rectangle panelBtn = {screenw-10, screenh-100, 10, 20};
     Rectangle btn1 = {screenw-85, 30, 70, 30};
     Rectangle btn2 = {screenw-85, 100, 70, 30};
@@ -169,6 +196,7 @@ int main(){
 
         EndMode2D();
 
+        checkBounds();
         if(isPanelOpen){
             DrawRectangleRec(panel, lines);
             DrawRectangleRec(panelBtn, textc);
@@ -179,6 +207,8 @@ int main(){
                 DrawText("tools", btn1.x+8, btn1.y+8, 20, bg);
                 DrawRectangleRec(btn2, textc);
                 DrawText("patterns", btn2.x+1, btn2.y+8, 15, bg);
+                DrawRectangleRec(btn3, textc);
+                DrawText("stats", btn3.x+8, btn3.y+8, 20, bg);
                 break;
                 case tools:
                 DrawRectangleRec(btn1, textc);
@@ -215,12 +245,22 @@ int main(){
                 DrawText("rpento", btn10.x, btn10.y+8, 20, bg);
                 DrawRectangleRec(btn11, textc);
                 DrawText("back", btn11.x+8, btn11.y+8, 20, bg);
+                break;
+                case stats:
+                DrawText(TextFormat("peak\npopulation: %d", peak), panel.x+5, panel.y+20, 20, textc);
+                if (livecells.empty()) DrawText("bounding box:\n0 x 0", panel.x+5, panel.y+70, 20, textc);
+                else DrawText(TextFormat("bounding box:\n%d x %d", maxx-minx+1, maxy-miny+1), panel.x+5, panel.y+70, 20, textc);
+                if(gen) DrawText(TextFormat("avg population: \n%d", total/gen), panel.x+5, panel.y+120, 20, textc);
+                else DrawText("avg population: 0", panel.x+5, panel.y+120, 20, textc);
+                DrawRectangleRec(btn11, textc);
+                DrawText("back", btn11.x+8, btn11.y+8, 20, bg);
             }
         }
         else{
             DrawRectangleRec(panelBtn, textc);
             DrawText("<", panelBtn.x+1, panelBtn.y, 20, bg);
         }
+
         DrawText(TextFormat("generations: %d", gen), 10, 10, 20, textc);
         DrawText(TextFormat("live cells: %d", live), 10, 30, 20, textc);
         DrawText(TextFormat("speed: %.2fx", 2-interval), 10, 50, 20, textc);
@@ -229,6 +269,7 @@ int main(){
 
         wheel = GetMouseWheelMove();
         live = livecells.size();
+        peak = (live > peak ? live : peak);
 
         if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
             bool used = false;
@@ -245,6 +286,10 @@ int main(){
                     }
                     if(buttonClick(btn2)){
                         currPanel = patterns;
+                        used = true;
+                    }
+                    if(buttonClick(btn3)){
+                        currPanel = stats;
                         used = true;
                     }
                     break;
@@ -312,6 +357,12 @@ int main(){
                         used = true;
                     }
                     else if(buttonClick(btn11)){
+                        currPanel = def;
+                        used = true;
+                    }
+                    break;
+                    case stats:
+                    if(buttonClick(btn11)){
                         currPanel = def;
                         used = true;
                     }
@@ -411,17 +462,14 @@ int main(){
         }
 
         if(IsKeyPressed(KEY_C)){
-            livecells.clear();
-            gen = 0;
-            live = 0;
+            reset();
             camera.zoom = 1.0f;
             camera.offset = {screenw/2.0f, screenh/2.0f};
             camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
         }
 
         if(IsKeyPressed(KEY_R)){
-            gen = 0;
-            livecells.clear();
+            reset();
             for(int i = startx; i < endx; i++){
                 for(int j = starty; j < endy; j++){
                     if(GetRandomValue(0, 100) < 20){
@@ -433,6 +481,7 @@ int main(){
 
         if(IsKeyPressed(KEY_N)){
             gen++;
+            total += live;
             updateGrid();
         }
 
@@ -447,7 +496,7 @@ int main(){
 
         if(IsKeyPressed(KEY_EQUAL)){
             if(interval > 0.01f){
-                if(interval < 0.1f)
+                if(interval <= 0.1f)
                     interval -= 0.01f;
                 else
                     interval -= 0.1f;
@@ -459,6 +508,7 @@ int main(){
             if(timer >= interval){
                 updateGrid();
                 gen++;
+                total += live;
                 timer = 0.0f;
             }
         }
