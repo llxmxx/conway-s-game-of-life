@@ -60,6 +60,8 @@ int total;
 int minx, maxx;
 int miny, maxy;
 
+vector<int> populationGraph;
+
 unordered_set<cell, cell_hash> livecells;
 
 Camera2D camera = {0};
@@ -120,11 +122,13 @@ void reset(){
     livecells.clear();
     gen = 0;
     live = 0;
+    peak = 0;
     minx = 4e6;
     maxx = -4e6;
     miny = 4e6;
     maxx = -4e6;
     total = 0;
+    populationGraph.clear();
 }
 
 int main(){
@@ -144,7 +148,7 @@ int main(){
     camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
     camera.zoom = 1.0f;
 
-    Rectangle panel = {screenw-175, 0, 175, screenh};
+    Rectangle panel = {screenw-200, 0, 200, screenh};
     Rectangle panelBtn = {screenw-10, screenh-100, 10, 20};
     Rectangle btn1 = {screenw-85, 30, 70, 30};
     Rectangle btn2 = {screenw-85, 100, 70, 30};
@@ -157,6 +161,9 @@ int main(){
     Rectangle btn9 = {screenw-85, 590, 70, 30};
     Rectangle btn10 = {screenw-85, 660, 70, 30};
     Rectangle btn11 = {screenw-85, 730, 70, 30};
+
+    int graphx = panel.x+5, graphy = panel.y+180;
+    int graphw = 190, graphh = 380;
 
     cell startc, endc;
 
@@ -252,6 +259,19 @@ int main(){
                 else DrawText(TextFormat("bounding box:\n%d x %d", maxx-minx+1, maxy-miny+1), panel.x+5, panel.y+70, 20, textc);
                 if(gen) DrawText(TextFormat("avg population: \n%d", total/gen), panel.x+5, panel.y+120, 20, textc);
                 else DrawText("avg population: 0", panel.x+5, panel.y+120, 20, textc);
+                if(populationGraph.size() > 1){
+                    int maxPop = 1;
+                    for(int p : populationGraph){
+                        maxPop = max(maxPop, p);
+                    }
+                    for(int i = 1; i < populationGraph.size(); i++){
+                        float x1 = graphx + (float)(i-1) * graphw/(populationGraph.size()-1);
+                        float y1 = graphy + graphh - (float)populationGraph[i-1]*graphh/maxPop;
+                        float x2 = graphx + (float)i * graphw/(populationGraph.size()-1);
+                        float y2 = graphy + graphh - (float)populationGraph[i]*graphh/maxPop;
+                        DrawLine(x1, y1, x2, y2, textc);
+                    }
+                }
                 DrawRectangleRec(btn11, textc);
                 DrawText("back", btn11.x+8, btn11.y+8, 20, bg);
             }
@@ -270,6 +290,10 @@ int main(){
         wheel = GetMouseWheelMove();
         live = livecells.size();
         peak = (live > peak ? live : peak);
+
+        if(populationGraph.size() > 500){
+            populationGraph.erase(populationGraph.begin());
+        }
 
         if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
             bool used = false;
@@ -508,6 +532,7 @@ int main(){
             if(timer >= interval){
                 updateGrid();
                 gen++;
+                populationGraph.push_back(live);
                 total += live;
                 timer = 0.0f;
             }
