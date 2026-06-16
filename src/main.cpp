@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 #include <raylib.h>
 using namespace std;
+#define endl '\n'
 
 struct cell{
     int x;
@@ -148,19 +149,22 @@ int main(){
     camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
     camera.zoom = 1.0f;
 
+    float btnx = screenw-85;
+    float btnw = 70, btnh = 30;
+
     Rectangle panel = {screenw-200, 0, 200, screenh};
     Rectangle panelBtn = {screenw-10, screenh-100, 10, 20};
-    Rectangle btn1 = {screenw-85, 30, 70, 30};
-    Rectangle btn2 = {screenw-85, 100, 70, 30};
-    Rectangle btn3 = {screenw-85, 170, 70, 30};
-    Rectangle btn4 = {screenw-85, 240, 70, 30};
-    Rectangle btn5 = {screenw-85, 310, 70, 30};
-    Rectangle btn6 = {screenw-85, 380, 70, 30};
-    Rectangle btn7 = {screenw-85, 450, 70, 30};
-    Rectangle btn8 = {screenw-85, 520, 70, 30};
-    Rectangle btn9 = {screenw-85, 590, 70, 30};
-    Rectangle btn10 = {screenw-85, 660, 70, 30};
-    Rectangle btn11 = {screenw-85, 730, 70, 30};
+    Rectangle btn1 = {btnx, 30, btnw, btnh};
+    Rectangle btn2 = {btnx, 100, btnw, btnh};
+    Rectangle btn3 = {btnx, 170, btnw, btnh};
+    Rectangle btn4 = {btnx, 240, btnw, btnh};
+    Rectangle btn5 = {btnx, 310, btnw, btnh};
+    Rectangle btn6 = {btnx, 380, btnw, btnh};
+    Rectangle btn7 = {btnx, 450, btnw, btnh};
+    Rectangle btn8 = {btnx, 520, btnw, btnh};
+    Rectangle btn9 = {btnx, 590, btnw, btnh};
+    Rectangle btn10 = {btnx, 660, btnw, btnh};
+    Rectangle btn11 = {btnx, 730, btnw, btnh};
 
     int graphx = panel.x+5, graphy = panel.y+180;
     int graphw = 190, graphh = 380;
@@ -216,6 +220,12 @@ int main(){
                 DrawText("patterns", btn2.x+1, btn2.y+8, 15, bg);
                 DrawRectangleRec(btn3, textc);
                 DrawText("stats", btn3.x+8, btn3.y+8, 20, bg);
+                DrawRectangleRec(btn4, textc);
+                DrawText("save", btn4.x+8, btn4.y+8, 20, bg);
+                DrawRectangleRec(btn5, textc);
+                DrawText("load", btn5.x+8, btn5.y+8, 20, bg);
+                DrawRectangleRec(btn6, textc);
+                DrawText("import", btn6.x+5, btn6.y+8, 20, bg);
                 break;
                 case tools:
                 DrawRectangleRec(btn1, textc);
@@ -316,6 +326,29 @@ int main(){
                         currPanel = stats;
                         used = true;
                     }
+                    if(buttonClick(btn4) && !running){
+                        ofstream file("saves/save.life");
+                        file << gen << endl;
+                        file << camera.offset.x << ' ' << camera.offset.y << endl;
+                        file << camera.target.x << ' ' << camera.target.y << endl;
+                        file << camera.zoom << endl;
+                        file << live << endl;
+                        for(auto c : livecells){
+                            file << c.x << ' ' << c.y << endl;
+                        }
+                        file.close();
+                    }
+                    if(buttonClick(btn5) && !running){
+                        ifstream file("saves/save.life");
+                        livecells.clear();
+                        file >> gen >> camera.offset.x >> camera.offset.y >> camera.target.x >> camera.target.y >> camera.zoom >> live;
+                        for(int i = 0; i < live; i++){
+                            cell c;
+                            file >> c.x >> c.y;
+                            livecells.emplace(c);
+                        }
+                        file.close();
+                    }
                     break;
                     case tools:
                     if(buttonClick(btn1)){
@@ -392,7 +425,7 @@ int main(){
                     }
                 }
             }
-            if(!used && (!isPanelOpen || !buttonClick(panel))){
+            if(!isPanelOpen || !buttonClick(panel)){
                 dragging = true;
                 if(currTool == rect || currTool == line){
                     startc = getCell();
