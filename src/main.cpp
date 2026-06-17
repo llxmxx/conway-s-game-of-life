@@ -23,7 +23,7 @@ enum tool{
 };
 
 enum panels{
-    def, tools, patterns, stats
+    def, tools, patterns, stats, load
 };
 
 enum pattern{
@@ -132,6 +132,18 @@ void reset(){
     populationGraph.clear();
 }
 
+void loadFile(string filen){
+    ifstream file(filen);
+    livecells.clear();
+    file >> gen >> camera.offset.x >> camera.offset.y >> camera.target.x >> camera.target.y >> camera.zoom >> live;
+    for(int i = 0; i < live; i++){
+        cell c;
+        file >> c.x >> c.y;
+        livecells.emplace(c);
+    }
+    file.close();
+}
+
 int main(){
     reset();
 
@@ -168,6 +180,8 @@ int main(){
 
     int graphx = panel.x+5, graphy = panel.y+180;
     int graphw = 190, graphh = 380;
+
+    vector<string> files;
 
     cell startc, endc;
 
@@ -284,6 +298,16 @@ int main(){
                 }
                 DrawRectangleRec(btn11, textc);
                 DrawText("back", btn11.x+8, btn11.y+8, 20, bg);
+                break;
+                case load:
+                vector<Rectangle> btns = {btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10};
+                for(int i = 0; i < files.size(); i++){
+                    Rectangle btn = btns[i];
+                    DrawRectangleRec(btn, textc);
+                    DrawText(files[i].c_str(), btn.x, btn.y+8, 20, bg);
+                }
+                DrawRectangleRec(btn11, textc);
+                DrawText("back", btn11.x+8, btn11.x+8, 20, bg);
             }
         }
         else{
@@ -306,28 +330,28 @@ int main(){
         }
 
         if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
-            bool used = false;
             if(buttonClick(panelBtn)){
                 isPanelOpen = !isPanelOpen;
-                used = true;
             }
             else if(isPanelOpen){
                 switch(currPanel){
                     case def:
                     if(buttonClick(btn1)){
                         currPanel = tools;
-                        used = true;
                     }
-                    if(buttonClick(btn2)){
+                    else if(buttonClick(btn2)){
                         currPanel = patterns;
-                        used = true;
                     }
-                    if(buttonClick(btn3)){
+                    else if(buttonClick(btn3)){
                         currPanel = stats;
-                        used = true;
                     }
-                    if(buttonClick(btn4) && !running){
-                        ofstream file("saves/save.life");
+                    else if(buttonClick(btn4) && !running){
+                        string filen;
+                        for(int n = 1; n < 10; n++){
+                            filen = "saves/save" + to_string(n) + ".life";
+                            if(!filesystem::exists(filen)) break;
+                        }
+                        ofstream file(filen);
                         file << gen << endl;
                         file << camera.offset.x << ' ' << camera.offset.y << endl;
                         file << camera.target.x << ' ' << camera.target.y << endl;
@@ -338,99 +362,91 @@ int main(){
                         }
                         file.close();
                     }
-                    if(buttonClick(btn5) && !running){
-                        ifstream file("saves/save.life");
-                        livecells.clear();
-                        file >> gen >> camera.offset.x >> camera.offset.y >> camera.target.x >> camera.target.y >> camera.zoom >> live;
-                        for(int i = 0; i < live; i++){
-                            cell c;
-                            file >> c.x >> c.y;
-                            livecells.emplace(c);
-                        }
-                        file.close();
+                    else if(buttonClick(btn5)){
+                        currPanel = load;
+                        files.clear();
+                        for(auto file : filesystem::directory_iterator("saves")) files.emplace_back(file.path().filename().string());
+                        while(files.size() > 10) files.erase(files.begin());
                     }
                     break;
                     case tools:
                     if(buttonClick(btn1)){
                         currTool = brush;
-                        used = true;
+                        currPattern = nor;
                     }
                     else if(buttonClick(btn2)){
                         currTool = erase;
-                        used = true;
+                        currPattern = nor;
                     }
                     else if(buttonClick(btn3)){
                         currTool = rect;
-                        used = true;
+                        currPattern = nor;
                     }
                     else if(buttonClick(btn4)){
                         currTool = line;
-                        used = true;
+                        currPattern = nor;
                     }
                     else if(buttonClick(btn11)){
                         currPanel = def;
-                        used = true;
                     }
                     break;
                     case patterns:
                     if(buttonClick(btn1)){
                         currPattern = nor;
-                        used = true;
                     }
                     else if(buttonClick(btn2)){
                         currPattern = glider;
-                        used = true;
                     }
                     else if(buttonClick(btn3)){
                         currPattern = lwss;
-                        used = true;
                     }
                     else if(buttonClick(btn4)){
                         currPattern = mwss;
-                        used = true;
                     }
                     else if(buttonClick(btn5)){
                         currPattern = hwss;
-                        used = true;
                     }
                     else if(buttonClick(btn6)){
                         currPattern = gosper;
-                        used = true;
                     }
                     else if(buttonClick(btn7)){
                         currPattern = pulsar;
-                        used = true;
                     }
                     else if(buttonClick(btn8)){
                         currPattern = pdthlon;
-                        used = true;
                     }
                     else if(buttonClick(btn9)){
                         currPattern = acorn;
-                        used = true;
                     }
                     else if(buttonClick(btn10)){
                         currPattern = rpento;
-                        used = true;
                     }
                     else if(buttonClick(btn11)){
                         currPanel = def;
-                        used = true;
                     }
                     break;
                     case stats:
                     if(buttonClick(btn11)){
                         currPanel = def;
-                        used = true;
+                    }
+                    break;
+                    case load:
+                    if(buttonClick(btn11)){
+                        currPanel = def;
+                    }
+                    vector<Rectangle> btns = {btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10};
+                    for(int i = 0; i < 10; i++){
+                        if(buttonClick(btns[i])){
+                            loadFile("saves/"+files[i]);
+                            break;
+                        }
                     }
                 }
             }
-            if(!isPanelOpen || !buttonClick(panel)){
+            if((!isPanelOpen || !buttonClick(panel)) && !buttonClick(panelBtn)){
                 dragging = true;
-                if(currTool == rect || currTool == line){
-                    startc = getCell();
-                }
-                else if(currPattern != nor){
+                if(currPattern != nor){
+                    currTool = brush;
                     dragging = false;
                     cell c = getCell();
                     int n = pat[currPattern].size();
@@ -438,6 +454,9 @@ int main(){
                         cell nc = {c.x+pat[currPattern][i].x, c.y+pat[currPattern][i].y};
                         livecells.emplace(nc);
                     }
+                }
+                else if(currTool == rect || currTool == line){
+                    startc = getCell();
                 }
             }
         }
