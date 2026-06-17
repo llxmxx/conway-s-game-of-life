@@ -30,6 +30,15 @@ enum pattern{
     nor, glider, lwss, mwss, hwss, gosper, pulsar, pdthlon, acorn, rpento
 };
 
+struct state{
+    unordered_set<cell, cell_hash> livecells;
+    int gen = 0;
+    tool currTool = brush;
+    panels currPanel = def;
+    pattern currPattern = nor;
+    Camera2D camera = {0};
+};
+
 const int cell_size = 20;
 const int screenw = 1200;
 const int screenh = 800;
@@ -64,6 +73,9 @@ int miny, maxy;
 vector<int> populationGraph;
 
 unordered_set<cell, cell_hash> livecells;
+vector<state> acts;
+
+int curract = 0;
 
 Camera2D camera = {0};
 
@@ -144,6 +156,20 @@ void loadFile(string filen){
     file.close();
 }
 
+void currState(unordered_set<cell, cell_hash> livecells, tool currTool, panels currPanel, pattern currPattern, Camera2D camera){
+    state curr;
+    curr.livecells = livecells;
+    curr.gen = gen;
+    curr.currPanel = currPanel;
+    curr.currTool = currTool;
+    curr.currPattern = currPattern;
+    curr.camera.offset = camera.offset;
+    curr.camera.target = camera.target;
+    curr.camera.zoom = camera.zoom;
+    acts.emplace_back(curr);
+    curract = acts.size()-1;
+}
+
 int main(){
     reset();
 
@@ -160,6 +186,13 @@ int main(){
     camera.offset = {screenw/2.0f, screenh/2.0f};
     camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
     camera.zoom = 1.0f;
+
+    state start;
+    start.livecells.clear();
+    start.camera.offset = camera.offset;
+    start.camera.target = camera.target;
+    start.camera.zoom = 1.0f;
+    acts.emplace_back(start);
 
     float btnx = screenw-85;
     float btnw = 70, btnh = 30;
@@ -474,31 +507,34 @@ int main(){
             }
         }
 
-        if(IsMouseButtonReleased(MOUSE_LEFT_BUTTON) && dragging){
-            endc = getCell();
-            switch(currTool){
-                case rect:
-                for(int x = min(startc.x, endc.x); x <= max(startc.x, endc.x); x++){
-                    for(int y = min(startc.y, endc.y); y <= max(startc.y, endc.y); y++){
-                        cell c = {x, y};
+        if(IsMouseButtonReleased(MOUSE_LEFT_BUTTON)){
+            if(dragging){
+                endc = getCell();
+                switch(currTool){
+                    case rect:
+                    for(int x = min(startc.x, endc.x); x <= max(startc.x, endc.x); x++){
+                        for(int y = min(startc.y, endc.y); y <= max(startc.y, endc.y); y++){
+                            cell c = {x, y};
+                            livecells.emplace(c);
+                        }
+                    }
+                    break;
+                    case line:
+                    float dx = startc.x - endc.x, dy = startc.y - endc.y;
+                    int steps = max(abs(dx), abs(dy));
+                    if (steps == 0) break;
+                    dx /= steps;
+                    dy /= steps;
+                    for(int i = 0; i < abs(steps); i++){
+                        float x = startc.x-dx*i, y = startc.y-dy*i;
+                        cell c = {(int)round(x), (int)round(y)};
                         livecells.emplace(c);
                     }
+                    break;
                 }
-                break;
-                case line:
-                float dx = startc.x - endc.x, dy = startc.y - endc.y;
-                int steps = max(abs(dx), abs(dy));
-                if (steps == 0) break;
-                dx /= steps;
-                dy /= steps;
-                for(int i = 0; i < abs(steps); i++){
-                    float x = startc.x-dx*i, y = startc.y-dy*i;
-                    cell c = {(int)round(x), (int)round(y)};
-                    livecells.emplace(c);
-                }
-                break;
+                dragging = false;
             }
-            dragging = false;
+            currState(livecells, currTool, currPanel, currPattern, camera);
         }
 
         if(IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)){
@@ -513,6 +549,7 @@ int main(){
                 }
                 gen = 0;
             }
+            currState(livecells, currTool, currPanel, currPattern, camera);
         }
 
         if(IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)){
@@ -520,6 +557,7 @@ int main(){
             delta = {delta.x*(-1.0f/camera.zoom), delta.y*(-1.0f/camera.zoom)};
             camera.target.x += delta.x;
             camera.target.y += delta.y;
+            currState(livecells, currTool, currPanel, currPattern, camera);
         }
 
         if(wheel){
@@ -531,6 +569,29 @@ int main(){
             if(zoomval > 20.0f) zoomval = 20.0f;
             else if(zoomval < 0.5f) zoomval = 0.5f;
             camera.zoom = zoomval;
+            currState(livecells, currTool, currPanel, currPattern, camera);
+        }
+
+        if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_Z)){
+            curract -= (curract > 0);
+            state curr = acts[curract];
+            livecells = curr.livecells;
+            gen = curr.gen;
+            camera = curr.camera;
+            currPanel = curr.currPanel;
+            currTool = curr.currTool;
+            currPattern = curr.currPattern;
+        }
+
+        if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_Y)){
+            curract += (curract < acts.size()-1);
+            state curr = acts[curract];
+            livecells = curr.livecells;
+            gen = curr.gen;
+            camera = curr.camera;
+            currPanel = curr.currPanel;
+            currTool = curr.currTool;
+            currPattern = curr.currPattern;
         }
 
         if(IsKeyPressed(KEY_SPACE)){
@@ -542,6 +603,7 @@ int main(){
             camera.zoom = 1.0f;
             camera.offset = {screenw/2.0f, screenh/2.0f};
             camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
+            currState(livecells, currTool, currPanel, currPattern, camera);
         }
 
         if(IsKeyPressed(KEY_R)){
