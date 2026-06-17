@@ -32,12 +32,13 @@ enum pattern{
 
 struct state{
     unordered_set<cell, cell_hash> livecells;
-    int gen = 0;
     tool currTool = brush;
     panels currPanel = def;
     pattern currPattern = nor;
     Camera2D camera = {0};
 };
+
+state start;
 
 const int cell_size = 20;
 const int screenw = 1200;
@@ -159,15 +160,20 @@ void loadFile(string filen){
 void currState(unordered_set<cell, cell_hash> livecells, tool currTool, panels currPanel, pattern currPattern, Camera2D camera){
     state curr;
     curr.livecells = livecells;
-    curr.gen = gen;
     curr.currPanel = currPanel;
     curr.currTool = currTool;
     curr.currPattern = currPattern;
     curr.camera.offset = camera.offset;
     curr.camera.target = camera.target;
     curr.camera.zoom = camera.zoom;
+    if (curract < acts.size()-1){
+        for(int i = curract+1; i < acts.size(); i++){
+            acts.erase(acts.begin()+i);
+        }
+    }
     acts.emplace_back(curr);
-    curract = acts.size()-1;
+    curract++;
+    while(acts.size() > 20) acts.erase(acts.begin());
 }
 
 int main(){
@@ -187,7 +193,6 @@ int main(){
     camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
     camera.zoom = 1.0f;
 
-    state start;
     start.livecells.clear();
     start.camera.offset = camera.offset;
     start.camera.target = camera.target;
@@ -271,8 +276,6 @@ int main(){
                 DrawText("save", btn4.x+8, btn4.y+8, 20, bg);
                 DrawRectangleRec(btn5, textc);
                 DrawText("load", btn5.x+8, btn5.y+8, 20, bg);
-                DrawRectangleRec(btn6, textc);
-                DrawText("import", btn6.x+5, btn6.y+8, 20, bg);
                 break;
                 case tools:
                 DrawRectangleRec(btn1, textc);
@@ -340,7 +343,8 @@ int main(){
                     DrawText(files[i].c_str(), btn.x, btn.y+8, 20, bg);
                 }
                 DrawRectangleRec(btn11, textc);
-                DrawText("back", btn11.x+8, btn11.x+8, 20, bg);
+                DrawText("back", btn11.x+8, btn11.y+8, 20, bg);
+                break;
             }
         }
         else{
@@ -576,22 +580,22 @@ int main(){
             curract -= (curract > 0);
             state curr = acts[curract];
             livecells = curr.livecells;
-            gen = curr.gen;
             camera = curr.camera;
             currPanel = curr.currPanel;
             currTool = curr.currTool;
             currPattern = curr.currPattern;
+            gen = 0;
         }
 
         if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_Y)){
             curract += (curract < acts.size()-1);
             state curr = acts[curract];
             livecells = curr.livecells;
-            gen = curr.gen;
             camera = curr.camera;
             currPanel = curr.currPanel;
             currTool = curr.currTool;
             currPattern = curr.currPattern;
+            gen = 0;
         }
 
         if(IsKeyPressed(KEY_SPACE)){
@@ -615,6 +619,7 @@ int main(){
                     }
                 }
             }
+            currState(livecells, currTool, currPanel, currPattern, camera);
         }
 
         if(IsKeyPressed(KEY_N)){
