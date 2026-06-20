@@ -167,13 +167,43 @@ void currState(unordered_set<cell, cell_hash> livecells, tool currTool, panels c
     curr.camera.target = camera.target;
     curr.camera.zoom = camera.zoom;
     if (curract < acts.size()-1){
-        for(int i = curract+1; i < acts.size(); i++){
+        for(int i = curract+1; i < acts.size()+1; i++){
             acts.erase(acts.begin()+i);
         }
     }
     acts.emplace_back(curr);
     curract++;
-    while(acts.size() > 20) acts.erase(acts.begin());
+}
+
+void drawPattern(cell c, pattern curr, int mir, int rot){
+    int n = pat[curr].size();
+    for(int i = 0; i < n; i++){
+        cell nc;
+        int x = pat[curr][i].x;
+        int y = pat[curr][i].y;
+        if(rot == 1){
+            int tx = x;
+            x = y;
+            y = -tx;
+        }
+        else if(rot == 2){
+            x = -x;
+            y = -y;
+        }
+        else if(rot == 3){
+            int tx = x;
+            x = -y;
+            y = tx;
+        }
+        if(mir == 1){
+            x*=-1;
+        }
+        else if(mir == 2){
+            y*=-1;
+        }
+        nc = {c.x+x, c.y+y};
+        livecells.emplace(nc);
+    }
 }
 
 int main(){
@@ -201,6 +231,9 @@ int main(){
 
     float btnx = screenw-85;
     float btnw = 70, btnh = 30;
+
+    int mir = 0;
+    int rot = 0;
 
     Rectangle panel = {screenw-200, 0, 200, screenh};
     Rectangle panelBtn = {screenw-10, screenh-100, 10, 20};
@@ -410,18 +443,26 @@ int main(){
                     if(buttonClick(btn1)){
                         currTool = brush;
                         currPattern = nor;
+                        mir = 0;
+                        rot = 0;
                     }
                     else if(buttonClick(btn2)){
                         currTool = erase;
                         currPattern = nor;
+                        mir = 0;
+                        rot = 0;
                     }
                     else if(buttonClick(btn3)){
                         currTool = rect;
                         currPattern = nor;
+                        mir = 0;
+                        rot = 0;
                     }
                     else if(buttonClick(btn4)){
                         currTool = line;
                         currPattern = nor;
+                        mir = 0;
+                        rot = 0;
                     }
                     else if(buttonClick(btn11)){
                         currPanel = def;
@@ -430,33 +471,53 @@ int main(){
                     case patterns:
                     if(buttonClick(btn1)){
                         currPattern = nor;
+                        mir = 0;
+                        rot = 0;
                     }
                     else if(buttonClick(btn2)){
                         currPattern = glider;
+                        mir = 0;
+                        rot = 0;
                     }
                     else if(buttonClick(btn3)){
                         currPattern = lwss;
+                        mir = 0;
+                        rot = 0;
                     }
                     else if(buttonClick(btn4)){
                         currPattern = mwss;
+                        mir = 0;
+                        rot = 0;
                     }
                     else if(buttonClick(btn5)){
                         currPattern = hwss;
+                        mir = 0;
+                        rot = 0;
                     }
                     else if(buttonClick(btn6)){
                         currPattern = gosper;
+                        mir = 0;
+                        rot = 0;
                     }
                     else if(buttonClick(btn7)){
                         currPattern = pulsar;
+                        mir = 0;
+                        rot = 0;
                     }
                     else if(buttonClick(btn8)){
                         currPattern = pdthlon;
+                        mir = 0;
+                        rot = 0;
                     }
                     else if(buttonClick(btn9)){
                         currPattern = acorn;
+                        mir = 0;
+                        rot = 0;
                     }
                     else if(buttonClick(btn10)){
                         currPattern = rpento;
+                        mir = 0;
+                        rot = 0;
                     }
                     else if(buttonClick(btn11)){
                         currPanel = def;
@@ -478,6 +539,8 @@ int main(){
                             break;
                         }
                     }
+                    mir = 0;
+                    rot = 0;
                 }
             }
             if((!isPanelOpen || !buttonClick(panel)) && !buttonClick(panelBtn)){
@@ -486,11 +549,7 @@ int main(){
                     currTool = brush;
                     dragging = false;
                     cell c = getCell();
-                    int n = pat[currPattern].size();
-                    for(int i = 0; i < n; i++){
-                        cell nc = {c.x+pat[currPattern][i].x, c.y+pat[currPattern][i].y};
-                        livecells.emplace(nc);
-                    }
+                    drawPattern(c, currPattern, mir, rot);
                 }
                 else if(currTool == rect || currTool == line){
                     startc = getCell();
@@ -600,6 +659,15 @@ int main(){
 
         if(IsKeyPressed(KEY_SPACE)){
             running = !running;
+        }
+
+        if(currPattern!=nor){
+            if(IsKeyPressed(KEY_X)){
+                mir = (mir+1 < 3 ? mir+1 : 0);
+            }
+            else if(IsKeyPressed(KEY_Y)){
+                rot = (rot+1 < 4 ? rot+1 : 0);
+            }
         }
 
         if(IsKeyPressed(KEY_C)){
