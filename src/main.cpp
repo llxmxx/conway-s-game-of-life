@@ -19,7 +19,7 @@ struct cell_hash{
 };
 
 enum tool{
-    brush, erase, rect, line
+    brush, erase, rect, line, sel
 };
 
 enum panels{
@@ -51,6 +51,7 @@ Color bg = {34, 40, 49, 255};
 Color lines = {57, 62, 70, 255};
 Color cellc = {223, 208, 184, 255};
 Color textc = {148, 137, 121, 255};
+Color selc = {148, 137, 121, 255};
 
 map<pattern, vector<cell>> pat = {
     {glider, {{0, -1}, {1, 0}, {-1, 1}, {0, 1}, {1, 1}}},
@@ -71,9 +72,14 @@ int total;
 int minx, maxx;
 int miny, maxy;
 
+int mir = 0;
+int rot = 0;
+bool selDone = false;
+
 vector<int> populationGraph;
 
 unordered_set<cell, cell_hash> livecells;
+vector<cell> selection;
 vector<state> acts;
 
 int curract = 0;
@@ -145,6 +151,13 @@ void reset(){
     populationGraph.clear();
 }
 
+void resetHm(){
+    mir = 0;
+    rot = 0;
+    selection.clear();
+    selDone = false;
+}
+
 void loadFile(string filen){
     ifstream file(filen);
     livecells.clear();
@@ -175,7 +188,7 @@ void currState(unordered_set<cell, cell_hash> livecells, tool currTool, panels c
     curract++;
 }
 
-void drawPattern(cell c, pattern curr, int mir, int rot){
+void drawPattern(cell c, pattern curr){
     int n = pat[curr].size();
     for(int i = 0; i < n; i++){
         cell nc;
@@ -232,9 +245,6 @@ int main(){
     float btnx = screenw-85;
     float btnw = 70, btnh = 30;
 
-    int mir = 0;
-    int rot = 0;
-
     Rectangle panel = {screenw-200, 0, 200, screenh};
     Rectangle panelBtn = {screenw-10, screenh-100, 10, 20};
     Rectangle btn1 = {btnx, 30, btnw, btnh};
@@ -282,11 +292,14 @@ int main(){
         for(int i = starty*cell_size; i < endy*cell_size; i += cell_size){
             DrawLine(startx, i, endx*cell_size, i, lines);
         }
-        for(int x = startx; x < endx; x++){
-            for(int y = starty; y < endy; y++){
-                if(livecells.find({x, y}) != livecells.end()){
-                    DrawRectangle(x*cell_size, y*cell_size, cell_size, cell_size, cellc);
-                }
+        for(cell c : livecells){
+            if(startx <= c.x < endx && starty <= c.y < endy){
+                DrawRectangle(c.x*cell_size, c.y*cell_size, cell_size, cell_size, cellc);
+            }
+        }
+        for(cell c : selection){
+            if(startx <= c.x < endx && starty <= c.y < endy){
+                DrawRectangle(c.x*cell_size, c.y*cell_size, cell_size, cell_size, selc);
             }
         }
 
@@ -319,6 +332,8 @@ int main(){
                 DrawText("rect", btn3.x+8, btn3.y+8, 20, bg);
                 DrawRectangleRec(btn4, textc);
                 DrawText("line", btn4.x+12, btn4.y+8, 20, bg);
+                DrawRectangleRec(btn5, textc);
+                DrawText("select", btn5.x+1, btn5.y+8, 20, bg);
                 DrawRectangleRec(btn11, textc);
                 DrawText("back", btn11.x+8, btn11.y+8, 20, bg);
                 break;
@@ -443,26 +458,27 @@ int main(){
                     if(buttonClick(btn1)){
                         currTool = brush;
                         currPattern = nor;
-                        mir = 0;
-                        rot = 0;
+                        resetHm();
                     }
                     else if(buttonClick(btn2)){
                         currTool = erase;
                         currPattern = nor;
-                        mir = 0;
-                        rot = 0;
+                        resetHm();
                     }
                     else if(buttonClick(btn3)){
                         currTool = rect;
                         currPattern = nor;
-                        mir = 0;
-                        rot = 0;
+                        resetHm();
                     }
                     else if(buttonClick(btn4)){
                         currTool = line;
                         currPattern = nor;
-                        mir = 0;
-                        rot = 0;
+                        resetHm();
+                    }
+                    else if(buttonClick(btn5)){
+                        currTool = sel;
+                        currPattern = nor;
+                        resetHm();
                     }
                     else if(buttonClick(btn11)){
                         currPanel = def;
@@ -471,53 +487,43 @@ int main(){
                     case patterns:
                     if(buttonClick(btn1)){
                         currPattern = nor;
-                        mir = 0;
-                        rot = 0;
+                        resetHm();
                     }
                     else if(buttonClick(btn2)){
                         currPattern = glider;
-                        mir = 0;
-                        rot = 0;
+                        resetHm();
                     }
                     else if(buttonClick(btn3)){
                         currPattern = lwss;
-                        mir = 0;
-                        rot = 0;
+                        resetHm();
                     }
                     else if(buttonClick(btn4)){
                         currPattern = mwss;
-                        mir = 0;
-                        rot = 0;
+                        resetHm();
                     }
                     else if(buttonClick(btn5)){
                         currPattern = hwss;
-                        mir = 0;
-                        rot = 0;
+                        resetHm();
                     }
                     else if(buttonClick(btn6)){
                         currPattern = gosper;
-                        mir = 0;
-                        rot = 0;
+                        resetHm();
                     }
                     else if(buttonClick(btn7)){
                         currPattern = pulsar;
-                        mir = 0;
-                        rot = 0;
+                        resetHm();
                     }
                     else if(buttonClick(btn8)){
                         currPattern = pdthlon;
-                        mir = 0;
-                        rot = 0;
+                        resetHm();
                     }
                     else if(buttonClick(btn9)){
                         currPattern = acorn;
-                        mir = 0;
-                        rot = 0;
+                        resetHm();
                     }
                     else if(buttonClick(btn10)){
                         currPattern = rpento;
-                        mir = 0;
-                        rot = 0;
+                        resetHm();
                     }
                     else if(buttonClick(btn11)){
                         currPanel = def;
@@ -545,11 +551,14 @@ int main(){
             }
             if((!isPanelOpen || !buttonClick(panel)) && !buttonClick(panelBtn)){
                 dragging = true;
-                if(currPattern != nor){
+                if(currTool == sel){
+                    startc = getCell();
+                }
+                else if(currPattern != nor){
                     currTool = brush;
                     dragging = false;
                     cell c = getCell();
-                    drawPattern(c, currPattern, mir, rot);
+                    drawPattern(c, currPattern);
                 }
                 else if(currTool == rect || currTool == line){
                     startc = getCell();
@@ -582,18 +591,43 @@ int main(){
                         }
                     }
                     break;
-                    case line:
-                    float dx = startc.x - endc.x, dy = startc.y - endc.y;
-                    int steps = max(abs(dx), abs(dy));
-                    if (steps == 0) break;
-                    dx /= steps;
-                    dy /= steps;
-                    for(int i = 0; i < abs(steps); i++){
-                        float x = startc.x-dx*i, y = startc.y-dy*i;
-                        cell c = {(int)round(x), (int)round(y)};
-                        livecells.emplace(c);
+                    case line:{
+                        float dx = startc.x - endc.x, dy = startc.y - endc.y;
+                        int steps = max(abs(dx), abs(dy));
+                        if (steps == 0) break;
+                        dx /= steps;
+                        dy /= steps;
+                        for(int i = 0; i < abs(steps); i++){
+                            float x = startc.x-dx*i, y = startc.y-dy*i;
+                            cell c = {(int)round(x), (int)round(y)};
+                            livecells.emplace(c);
+                        }
+                        break;
                     }
-                    break;
+                    case sel:
+                    if(!selDone){
+                        selDone = true;
+                        for(int x = min(startc.x, endc.x); x <= max(startc.x, endc.x); x++){
+                            for(int y = min(startc.y, endc.y); y <= max(startc.y, endc.y); y++){
+                                cell c = {x, y};
+                                if(livecells.find(c) != livecells.end()){
+                                    selection.emplace_back(c);
+                                }
+                            }
+                        }
+                    }
+                    else{
+                        vector<cell> temp = selection;
+                        selection.clear();
+                        for(cell c : temp) livecells.erase(c);
+                        int dx = endc.x-startc.x, dy = endc.y-startc.y;
+                        for(int i = 0; i < temp.size(); i++){
+                            cell c = temp[i];
+                            cell nc = {c.x+dx, c.y+dy};
+                            selection.emplace_back(nc);
+                            livecells.emplace(nc);
+                        }
+                    }
                 }
                 dragging = false;
             }
@@ -602,15 +636,20 @@ int main(){
 
         if(IsMouseButtonPressed(MOUSE_RIGHT_BUTTON)){
             if(!isPanelOpen || !buttonClick(panel)){
-                Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), camera);
-                int row = mouse.x/cell_size;
-                int col = mouse.y/cell_size;
-                if(row >= 0 && row < rows && col >= 0 && col < cols){
-                    cell c = {row, col};
-                    if(currTool == erase) livecells.emplace(c);
-                    else livecells.erase(c);
+                if(selDone){
+                    resetHm();
                 }
-                gen = 0;
+                else{
+                    Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), camera);
+                    int row = mouse.x/cell_size;
+                    int col = mouse.y/cell_size;
+                    if(row >= 0 && row < rows && col >= 0 && col < cols){
+                        cell c = {row, col};
+                        if(currTool == erase) livecells.emplace(c);
+                        else livecells.erase(c);
+                    }
+                    gen = 0;
+                }
             }
             currState(livecells, currTool, currPanel, currPattern, camera);
         }
