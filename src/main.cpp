@@ -27,7 +27,7 @@ enum panels{
 };
 
 enum pattern{
-    nor, glider, lwss, mwss, hwss, gosper, pulsar, pdthlon, acorn, rpento
+    nor, glider, lwss, mwss, hwss, gosper, pulsar, pdthlon, acorn, rpento, cop
 };
 
 struct state{
@@ -696,17 +696,43 @@ int main(){
             gen = 0;
         }
 
+        if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_C) && selDone){
+            int minx = 4e6, maxx = -4e6;
+            int miny = 4e6, maxy = -4e6;
+            for(cell c : selection){
+                if(c.x < minx) minx = c.x;
+                else if(c.x > maxx) maxx = c.x;
+                if(c.y < miny) miny = c.y;
+                else if(c.y > maxy) maxy = c.y;
+            }
+            int midx = (minx+maxx)/2, midy = (miny+maxy)/2;
+            for(cell c : selection){
+                cell nc = {c.x-midx, c.y-midy};
+                pat[cop].emplace_back(nc);
+            }
+        }
+
+        if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_V)){
+            cell c = getCell();
+            drawPattern(c, cop);
+        }
+
         if(IsKeyPressed(KEY_SPACE)){
             running = !running;
         }
 
-        if(currPattern!=nor){
+        if(currPattern!=nor || selDone){
             if(IsKeyPressed(KEY_X)){
                 mir = (mir+1 < 3 ? mir+1 : 0);
             }
             else if(IsKeyPressed(KEY_Y)){
                 rot = (rot+1 < 4 ? rot+1 : 0);
             }
+        }
+
+        if(IsKeyPressed(KEY_DELETE) && selDone){
+            for(cell c : selection) livecells.erase(c);
+            resetHm();
         }
 
         if(IsKeyPressed(KEY_C)){
