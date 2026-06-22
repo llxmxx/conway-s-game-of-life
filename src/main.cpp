@@ -47,11 +47,12 @@ const int screenh = 800;
 int rows = 2000; //screenw/cell_size;
 int cols = 2000; //screenh/cell_size;
 
-Color bg = {34, 40, 49, 255};
-Color lines = {57, 62, 70, 255};
-Color cellc = {223, 208, 184, 255};
-Color textc = {148, 137, 121, 255};
-Color selc = {148, 137, 121, 255};
+Color bg = {15, 23, 42, 255};
+Color lines = {37, 47, 53, 255};
+Color btnc = {51, 65, 85, 255};
+Color cellc = {226, 232, 240, 255};
+Color textc = {248, 250, 252, 255};
+Color selc = {71, 85, 105, 255};
 
 map<pattern, vector<cell>> pat = {
     {glider, {{0, -1}, {1, 0}, {-1, 1}, {0, 1}, {1, 1}}},
@@ -267,11 +268,12 @@ int main(){
     start.camera.zoom = 1.0f;
     acts.emplace_back(start);
 
-    float btnx = screenw-85;
-    float btnw = 70, btnh = 30;
-
     Rectangle panel = {screenw-200, 0, 200, screenh};
     Rectangle panelBtn = {screenw-10, screenh-100, 10, 20};
+
+    float btnx = panel.x + 40;
+    float btnw = 120, btnh = 40;
+
     Rectangle btn1 = {btnx, 30, btnw, btnh};
     Rectangle btn2 = {btnx, 100, btnw, btnh};
     Rectangle btn3 = {btnx, 170, btnw, btnh};
@@ -284,7 +286,7 @@ int main(){
     Rectangle btn10 = {btnx, 660, btnw, btnh};
     Rectangle btn11 = {btnx, 730, btnw, btnh};
 
-    int graphx = panel.x+5, graphy = panel.y+180;
+    int graphx = panel.x+5, graphy = btn4.y;
     int graphw = 190, graphh = 380;
 
     vector<string> files;
@@ -332,66 +334,66 @@ int main(){
 
         checkBounds();
         if(isPanelOpen){
-            DrawRectangleRec(panel, lines);
-            DrawRectangleRec(panelBtn, textc);
-            DrawText(">", panelBtn.x+1, panelBtn.y, 20, bg);
+            DrawRectangleRec(panel, bg);
+            DrawRectangleRec(panelBtn, btnc);
+            DrawText(">", panelBtn.x+3, panelBtn.y, 20, textc);
             switch(currPanel){
                 case def:
-                DrawRectangleRec(btn1, textc);
-                DrawText("tools", btn1.x+8, btn1.y+8, 20, bg);
-                DrawRectangleRec(btn2, textc);
-                DrawText("patterns", btn2.x+1, btn2.y+8, 15, bg);
-                DrawRectangleRec(btn3, textc);
-                DrawText("stats", btn3.x+8, btn3.y+8, 20, bg);
-                DrawRectangleRec(btn4, textc);
-                DrawText("save", btn4.x+8, btn4.y+8, 20, bg);
-                DrawRectangleRec(btn5, textc);
-                DrawText("load", btn5.x+8, btn5.y+8, 20, bg);
+                DrawRectangleRec(btn1, btnc);
+                DrawText("tools", btn1.x+33, btn1.y+10, 20, textc);
+                DrawRectangleRec(btn2, btnc);
+                DrawText("patterns", btn2.x+13, btn2.y+10, 20, textc);
+                DrawRectangleRec(btn3, btnc);
+                DrawText("stats", btn3.x+33, btn3.y+10, 20, textc);
+                DrawRectangleRec(btn4, btnc);
+                DrawText("save", btn4.x+37, btn4.y+10, 20, textc);
+                DrawRectangleRec(btn5, btnc);
+                DrawText("load", btn5.x+40, btn5.y+10, 20, textc);
                 break;
                 case tools:
-                DrawRectangleRec(btn1, textc);
-                DrawText("brush", btn1.x+1, btn1.y+8, 20, bg);
-                DrawRectangleRec(btn2, textc);
-                DrawText("erase", btn2.x+1, btn2.y+8, 20, bg);
-                DrawRectangleRec(btn3, textc);
-                DrawText("rect", btn3.x+8, btn3.y+8, 20, bg);
-                DrawRectangleRec(btn4, textc);
-                DrawText("line", btn4.x+12, btn4.y+8, 20, bg);
-                DrawRectangleRec(btn5, textc);
-                DrawText("select", btn5.x+1, btn5.y+8, 20, bg);
-                DrawRectangleRec(btn11, textc);
-                DrawText("back", btn11.x+8, btn11.y+8, 20, bg);
+                DrawRectangleRec(btn1, btnc);
+                DrawText("brush", btn1.x+30, btn1.y+10, 20, textc);
+                DrawRectangleRec(btn2, btnc);
+                DrawText("erase", btn2.x+30, btn2.y+10, 20, textc);
+                DrawRectangleRec(btn3, btnc);
+                DrawText("rect", btn3.x+37, btn3.y+10, 20, textc);
+                DrawRectangleRec(btn4, btnc);
+                DrawText("line", btn4.x+43, btn4.y+10, 20, textc);
+                DrawRectangleRec(btn5, btnc);
+                DrawText("select", btn5.x+28, btn5.y+10, 20, textc);
+                DrawRectangleRec(btn11, btnc);
+                DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
                 break;
                 case patterns:
-                DrawRectangleRec(btn1, textc);
-                DrawText("normal", btn1.x, btn1.y+8, 20, bg);
-                DrawRectangleRec(btn2, textc);
-                DrawText("glider", btn2.x, btn2.y+8, 20, bg);
-                DrawRectangleRec(btn3, textc);
-                DrawText("lwss", btn3.x+1, btn3.y+8, 20, bg);
-                DrawRectangleRec(btn4, textc);
-                DrawText("mwss", btn4.x+1, btn4.y+8, 20, bg);
-                DrawRectangleRec(btn5, textc);
-                DrawText("hwss", btn5.x+1, btn5.y+8, 20, bg);
-                DrawRectangleRec(btn6, textc);
-                DrawText("gosper", btn6.x, btn6.y+8, 20, bg);
-                DrawRectangleRec(btn7, textc);
-                DrawText("pulsar", btn7.x, btn7.y+8, 20, bg);
-                DrawRectangleRec(btn8, textc);
-                DrawText("pdthlon", btn8.x, btn8.y+8, 20, bg);
-                DrawRectangleRec(btn9, textc);
-                DrawText("acorn", btn9.x, btn9.y+8, 20, bg);
-                DrawRectangleRec(btn10, textc);
-                DrawText("rpento", btn10.x, btn10.y+8, 20, bg);
-                DrawRectangleRec(btn11, textc);
-                DrawText("back", btn11.x+8, btn11.y+8, 20, bg);
+                DrawRectangleRec(btn1, btnc);
+                DrawText("normal", btn1.x+28, btn1.y+10, 20, textc);
+                DrawRectangleRec(btn2, btnc);
+                DrawText("glider", btn2.x+33, btn2.y+10, 20, textc);
+                DrawRectangleRec(btn3, btnc);
+                DrawText("lwss", btn3.x+1+40, btn3.y+10, 20, textc);
+                DrawRectangleRec(btn4, btnc);
+                DrawText("mwss", btn4.x+1+37, btn4.y+10, 20, textc);
+                DrawRectangleRec(btn5, btnc);
+                DrawText("hwss", btn5.x+1+37, btn5.y+10, 20, textc);
+                DrawRectangleRec(btn6, btnc);
+                DrawText("gosper", btn6.x+28, btn6.y+10, 20, textc);
+                DrawRectangleRec(btn7, btnc);
+                DrawText("pulsar", btn7.x+28, btn7.y+10, 20, textc);
+                DrawRectangleRec(btn8, btnc);
+                DrawText("pdthlon", btn8.x+23, btn8.y+10, 20, textc);
+                DrawRectangleRec(btn9, btnc);
+                DrawText("acorn", btn9.x+31, btn9.y+10, 20, textc);
+                DrawRectangleRec(btn10, btnc);
+                DrawText("rpento", btn10.x+27, btn10.y+10, 20, textc);
+                DrawRectangleRec(btn11, btnc);
+                DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
                 break;
                 case stats:
-                DrawText(TextFormat("peak\npopulation: %d", peak), panel.x+5, panel.y+20, 20, textc);
-                if (livecells.empty()) DrawText("bounding box:\n0 x 0", panel.x+5, panel.y+70, 20, textc);
-                else DrawText(TextFormat("bounding box:\n%d x %d", maxx-minx+1, maxy-miny+1), panel.x+5, panel.y+70, 20, textc);
-                if(gen) DrawText(TextFormat("avg population: \n%d", total/gen), panel.x+5, panel.y+120, 20, textc);
-                else DrawText("avg population: 0", panel.x+5, panel.y+120, 20, textc);
+                DrawText(TextFormat("peak\npopulation: %d", peak), btnx-10, btn1.y, 20, textc);
+                if (livecells.empty()) DrawText("bounding box:\n0 x 0", btnx-10, btn2.y, 20, textc);
+                else DrawText(TextFormat("bounding box:\n%d x %d", maxx-minx+1, maxy-miny+1), btnx-10, btn2.y, 20, textc);
+                if(gen) DrawText(TextFormat("avg population: \n%d", total/gen), btnx-10, btn3.y, 20, textc);
+                else DrawText("avg population: \n0", btnx-10, btn3.y, 20, textc);
                 if(populationGraph.size() > 1){
                     int maxPop = 1;
                     for(int p : populationGraph){
@@ -405,29 +407,29 @@ int main(){
                         DrawLine(x1, y1, x2, y2, textc);
                     }
                 }
-                DrawRectangleRec(btn11, textc);
-                DrawText("back", btn11.x+8, btn11.y+8, 20, bg);
+                DrawRectangleRec(btn11, btnc);
+                DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
                 break;
                 case load:
                 vector<Rectangle> btns = {btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10};
                 for(int i = 0; i < files.size(); i++){
                     Rectangle btn = btns[i];
-                    DrawRectangleRec(btn, textc);
-                    DrawText(files[i].c_str(), btn.x, btn.y+8, 20, bg);
+                    DrawRectangleRec(btn, btnc);
+                    DrawText(files[i].c_str(), btn.x+5, btn.y+10, 20, textc);
                 }
-                DrawRectangleRec(btn11, textc);
-                DrawText("back", btn11.x+8, btn11.y+8, 20, bg);
+                DrawRectangleRec(btn11, btnc);
+                DrawText("back", btn11.x+35, btn11.y+8, 20, textc);
                 break;
             }
         }
         else{
-            DrawRectangleRec(panelBtn, textc);
-            DrawText("<", panelBtn.x+1, panelBtn.y, 20, bg);
+            DrawRectangleRec(panelBtn, btnc);
+            DrawText("<", panelBtn.x+1, panelBtn.y, 20, textc);
         }
 
         DrawText(TextFormat("generations: %d", gen), 10, 10, 20, textc);
         DrawText(TextFormat("live cells: %d", live), 10, 30, 20, textc);
-        DrawText(TextFormat("speed: %.2fx", 2-interval), 10, 50, 20, textc);
+        DrawText(TextFormat("speed: %.2fx", 1-interval), 10, 50, 20, textc);
 
         EndDrawing();
 
@@ -738,6 +740,7 @@ int main(){
         }
 
         if(IsKeyPressed(KEY_SPACE)){
+            resetHm();
             running = !running;
         }
 
