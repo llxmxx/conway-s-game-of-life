@@ -181,9 +181,7 @@ void currState(unordered_set<cell, cell_hash> livecells, tool currTool, panels c
     curr.camera.target = camera.target;
     curr.camera.zoom = camera.zoom;
     if (curract < acts.size()-1){
-        for(int i = curract+1; i < acts.size()+1; i++){
-            acts.erase(acts.begin()+i);
-        }
+        acts.erase(acts.begin() + curract + 1, acts.end());
     }
     acts.emplace_back(curr);
     curract++;
@@ -459,7 +457,7 @@ int main(){
                     }
                     else if(buttonClick(btn4) && !running){
                         string filen;
-                        for(int n = 1; n < 10; n++){
+                        for(int n = 1; n < files.size(); n++){
                             filen = "saves/save" + to_string(n) + ".life";
                             if(!filesystem::exists(filen)) break;
                         }
