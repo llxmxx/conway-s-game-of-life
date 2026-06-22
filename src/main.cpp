@@ -27,7 +27,7 @@ enum panels{
 };
 
 enum pattern{
-    nor, glider, lwss, mwss, hwss, gosper, pulsar, pdthlon, acorn, rpento, cop
+    nor, glider, lwss, mwss, hwss, gosper, pulsar, pdthlon, acorn, rpento, cop, selpat
 };
 
 struct state{
@@ -138,6 +138,13 @@ cell getCell(){
     return {row, col};
 }
 
+void resetHm(){
+    mir = 0;
+    rot = 0;
+    selection.clear();
+    selDone = false;
+}
+
 void reset(){
     livecells.clear();
     gen = 0;
@@ -149,13 +156,7 @@ void reset(){
     maxx = -4e6;
     total = 0;
     populationGraph.clear();
-}
-
-void resetHm(){
-    mir = 0;
-    rot = 0;
-    selection.clear();
-    selDone = false;
+    resetHm();
 }
 
 void loadFile(string filen){
@@ -216,7 +217,33 @@ void drawPattern(cell c, pattern curr){
         }
         nc = {c.x+x, c.y+y};
         livecells.emplace(nc);
+        if(curr == selpat) selection.emplace_back(nc);
     }
+}
+
+cell formPattern(pattern p){
+    cell minn = {(int)4e6, (int)4e6}, maxx = {(int)-4e6, (int)-4e6};
+    for(cell c : selection){
+        if(c.x < minn.x) minn.x = c.x;
+        if(c.x > maxx.x) maxx.x = c.x;
+        if(c.y < minn.y) minn.y = c.y;
+        if(c.y > maxx.y) maxx.y = c.y;
+    }
+    int midx = (minn.x+maxx.x)/2, midy = (minn.y+maxx.y)/2;
+    cell mid = {midx, midy};
+    pat[p].clear();
+    for(cell c : selection){
+        cell nc = {c.x-mid.x, c.y-mid.y};
+        pat[p].emplace_back(nc);
+    }
+    return mid;
+}
+
+void transformSel(){
+    cell mid = formPattern(selpat);
+    for(cell c : selection) livecells.erase(c);
+    selection.clear();
+    drawPattern(mid, selpat);
 }
 
 int main(){
@@ -697,24 +724,19 @@ int main(){
         }
 
         if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_C) && selDone){
-            int minx = 4e6, maxx = -4e6;
-            int miny = 4e6, maxy = -4e6;
-            for(cell c : selection){
-                if(c.x < minx) minx = c.x;
-                else if(c.x > maxx) maxx = c.x;
-                if(c.y < miny) miny = c.y;
-                else if(c.y > maxy) maxy = c.y;
-            }
-            int midx = (minx+maxx)/2, midy = (miny+maxy)/2;
-            for(cell c : selection){
-                cell nc = {c.x-midx, c.y-midy};
-                pat[cop].emplace_back(nc);
-            }
+            cell mid = formPattern(cop);
         }
 
         if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_V)){
             cell c = getCell();
             drawPattern(c, cop);
+            currState(livecells, currTool, currPanel, currPattern, camera);
+        }
+
+        if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_X) && selDone){
+            cell mid = formPattern(cop);
+            for(cell c : selection) livecells.erase(c);
+            resetHm();
         }
 
         if(IsKeyPressed(KEY_SPACE)){
@@ -722,11 +744,15 @@ int main(){
         }
 
         if(currPattern!=nor || selDone){
-            if(IsKeyPressed(KEY_X)){
+            if(IsKeyPressed(KEY_X) && !(IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))){
                 mir = (mir+1 < 3 ? mir+1 : 0);
+                if(selDone) transformSel();
+                currState(livecells, currTool, currPanel, currPattern, camera);
             }
             else if(IsKeyPressed(KEY_Y)){
                 rot = (rot+1 < 4 ? rot+1 : 0);
+                if(selDone) transformSel();
+                currState(livecells, currTool, currPanel, currPattern, camera);
             }
         }
 
@@ -735,7 +761,7 @@ int main(){
             resetHm();
         }
 
-        if(IsKeyPressed(KEY_C)){
+        if(IsKeyPressed(KEY_C) && !(IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL))){
             reset();
             camera.zoom = 1.0f;
             camera.offset = {screenw/2.0f, screenh/2.0f};
