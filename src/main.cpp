@@ -53,6 +53,7 @@ Color btnc = {51, 65, 85, 255};
 Color cellc = {226, 232, 240, 255};
 Color textc = {248, 250, 252, 255};
 Color selc = {71, 85, 105, 255};
+Color hoverc = {51, 65, 85, 200};
 
 map<pattern, vector<cell>> pat = {
     {glider, {{0, -1}, {1, 0}, {-1, 1}, {0, 1}, {1, 1}}},
@@ -113,6 +114,11 @@ bool buttonClick(Rectangle rect){
     Vector2 mouse = GetMousePosition();
     bool clicked = mouse.x >= rect.x && mouse.x <= rect.x+rect.width && mouse.y >= rect.y && mouse.y <= rect.y+rect.height && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
     return clicked;
+}
+
+bool buttonHover(Rectangle rect){
+    Vector2 mouse = GetMousePosition();
+    return CheckCollisionPointRec(mouse, rect);
 }
 
 void updateGrid(){
@@ -286,6 +292,10 @@ int main(){
     Rectangle btn10 = {btnx, 660, btnw, btnh};
     Rectangle btn11 = {btnx, 730, btnw, btnh};
 
+    int patSel = 0, toolSel = 0;
+
+    vector<Rectangle> btns = {btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10, btn11};
+
     int graphx = panel.x+5, graphy = btn4.y;
     int graphw = 190, graphh = 380;
 
@@ -316,6 +326,8 @@ int main(){
         for(int i = startx*cell_size; i < endx*cell_size; i += cell_size){
             DrawLine(i, starty, i, endy*cell_size, lines);
         }
+        cell curr = getCell();
+        DrawRectangle(curr.x*cell_size, curr.y*cell_size, cell_size, cell_size, selc);
         for(int i = starty*cell_size; i < endy*cell_size; i += cell_size){
             DrawLine(startx, i, endx*cell_size, i, lines);
         }
@@ -335,57 +347,52 @@ int main(){
         checkBounds();
         if(isPanelOpen){
             DrawRectangleRec(panel, bg);
-            DrawRectangleRec(panelBtn, btnc);
+            if(buttonHover(panelBtn)) DrawRectangleRec(panelBtn, hoverc);
+            else DrawRectangleRec(panelBtn, btnc);
             DrawText(">", panelBtn.x+3, panelBtn.y, 20, textc);
             switch(currPanel){
                 case def:
-                DrawRectangleRec(btn1, btnc);
+                for(int i = 0; i < 5; i++){
+                    Color col = btnc;
+                    if(buttonHover(btns[i])) col = hoverc;
+                    DrawRectangleRec(btns[i], col);
+                }
                 DrawText("tools", btn1.x+33, btn1.y+10, 20, textc);
-                DrawRectangleRec(btn2, btnc);
                 DrawText("patterns", btn2.x+13, btn2.y+10, 20, textc);
-                DrawRectangleRec(btn3, btnc);
                 DrawText("stats", btn3.x+33, btn3.y+10, 20, textc);
-                DrawRectangleRec(btn4, btnc);
                 DrawText("save", btn4.x+37, btn4.y+10, 20, textc);
-                DrawRectangleRec(btn5, btnc);
                 DrawText("load", btn5.x+40, btn5.y+10, 20, textc);
                 break;
                 case tools:
-                DrawRectangleRec(btn1, btnc);
+                for(int i = 0; i < 11; i++){
+                    if(i==5) i+=5;
+                    Color col = btnc;
+                    if(buttonHover(btns[i]) || (toolSel == i)) col = hoverc;
+                    DrawRectangleRec(btns[i], col);
+                }
                 DrawText("brush", btn1.x+30, btn1.y+10, 20, textc);
-                DrawRectangleRec(btn2, btnc);
                 DrawText("erase", btn2.x+30, btn2.y+10, 20, textc);
-                DrawRectangleRec(btn3, btnc);
                 DrawText("rect", btn3.x+37, btn3.y+10, 20, textc);
-                DrawRectangleRec(btn4, btnc);
                 DrawText("line", btn4.x+43, btn4.y+10, 20, textc);
-                DrawRectangleRec(btn5, btnc);
                 DrawText("select", btn5.x+28, btn5.y+10, 20, textc);
-                DrawRectangleRec(btn11, btnc);
                 DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
                 break;
                 case patterns:
-                DrawRectangleRec(btn1, btnc);
+                for(int i = 0; i < 11; i++){
+                    Color col = btnc;
+                    if(buttonHover(btns[i]) || patSel == i) col = hoverc;
+                    DrawRectangleRec(btns[i], col);
+                }
                 DrawText("normal", btn1.x+28, btn1.y+10, 20, textc);
-                DrawRectangleRec(btn2, btnc);
                 DrawText("glider", btn2.x+33, btn2.y+10, 20, textc);
-                DrawRectangleRec(btn3, btnc);
                 DrawText("lwss", btn3.x+1+40, btn3.y+10, 20, textc);
-                DrawRectangleRec(btn4, btnc);
                 DrawText("mwss", btn4.x+1+37, btn4.y+10, 20, textc);
-                DrawRectangleRec(btn5, btnc);
                 DrawText("hwss", btn5.x+1+37, btn5.y+10, 20, textc);
-                DrawRectangleRec(btn6, btnc);
                 DrawText("gosper", btn6.x+28, btn6.y+10, 20, textc);
-                DrawRectangleRec(btn7, btnc);
                 DrawText("pulsar", btn7.x+28, btn7.y+10, 20, textc);
-                DrawRectangleRec(btn8, btnc);
                 DrawText("pdthlon", btn8.x+23, btn8.y+10, 20, textc);
-                DrawRectangleRec(btn9, btnc);
                 DrawText("acorn", btn9.x+31, btn9.y+10, 20, textc);
-                DrawRectangleRec(btn10, btnc);
                 DrawText("rpento", btn10.x+27, btn10.y+10, 20, textc);
-                DrawRectangleRec(btn11, btnc);
                 DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
                 break;
                 case stats:
@@ -407,23 +414,27 @@ int main(){
                         DrawLine(x1, y1, x2, y2, textc);
                     }
                 }
-                DrawRectangleRec(btn11, btnc);
+                if(buttonHover(btn11)) DrawRectangleRec(btn11, hoverc);
+                else DrawRectangleRec(btn11, btnc);
                 DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
                 break;
                 case load:
-                vector<Rectangle> btns = {btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10};
                 for(int i = 0; i < files.size(); i++){
                     Rectangle btn = btns[i];
-                    DrawRectangleRec(btn, btnc);
+                    Color col = btnc;
+                    if(buttonHover(btn)) col = hoverc;
+                    DrawRectangleRec(btn, col);
                     DrawText(files[i].c_str(), btn.x+5, btn.y+10, 20, textc);
                 }
-                DrawRectangleRec(btn11, btnc);
+                if(buttonHover(btn11)) DrawRectangleRec(btn11, hoverc);
+                else DrawRectangleRec(btn11, btnc);
                 DrawText("back", btn11.x+35, btn11.y+8, 20, textc);
                 break;
             }
         }
         else{
-            DrawRectangleRec(panelBtn, btnc);
+            if(buttonHover(panelBtn)) DrawRectangleRec(panelBtn, hoverc);
+            else DrawRectangleRec(panelBtn, btnc);
             DrawText("<", panelBtn.x+1, panelBtn.y, 20, textc);
         }
 
@@ -439,6 +450,56 @@ int main(){
 
         if(populationGraph.size() > 500){
             populationGraph.erase(populationGraph.begin());
+        }
+
+        switch(currTool){
+            case brush:
+            toolSel = 0;
+            break;
+            case erase:
+            toolSel = 1;
+            break;
+            case rect:
+            toolSel = 2;
+            break;
+            case line:
+            toolSel = 3;
+            break;
+            case sel:
+            toolSel = 4;
+        }
+
+        switch(currPattern){
+            case nor:
+            patSel = 0;
+            break;
+            case glider:
+            patSel = 1;
+            break;
+            case lwss:
+            patSel = 2;
+            break;
+            case mwss:
+            patSel = 3;
+            break;
+            case hwss:
+            patSel = 4;
+            break;
+            case gosper:
+            patSel = 5;
+            break;
+            case pulsar:
+            patSel = 6;
+            break;
+            case pdthlon:
+            patSel = 7;
+            break;
+            case acorn:
+            patSel = 8;
+            break;
+            case rpento:
+            patSel = 9;
+            break;
         }
 
         if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON)){
@@ -565,7 +626,6 @@ int main(){
                     if(buttonClick(btn11)){
                         currPanel = def;
                     }
-                    vector<Rectangle> btns = {btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10};
                     for(int i = 0; i < 10; i++){
                         if(buttonClick(btns[i])){
                             loadFile("saves/"+files[i]);
