@@ -323,14 +323,8 @@ int main(){
 
         BeginMode2D(camera);
 
-        for(int i = startx*cell_size; i < endx*cell_size; i += cell_size){
-            DrawLine(i, starty, i, endy*cell_size, lines);
-        }
         cell curr = getCell();
         DrawRectangle(curr.x*cell_size, curr.y*cell_size, cell_size, cell_size, selc);
-        for(int i = starty*cell_size; i < endy*cell_size; i += cell_size){
-            DrawLine(startx, i, endx*cell_size, i, lines);
-        }
         for(cell c : livecells){
             if(startx <= c.x < endx && starty <= c.y < endy){
                 DrawRectangle(c.x*cell_size, c.y*cell_size, cell_size, cell_size, cellc);
@@ -340,6 +334,12 @@ int main(){
             if(startx <= c.x < endx && starty <= c.y < endy){
                 DrawRectangle(c.x*cell_size, c.y*cell_size, cell_size, cell_size, selc);
             }
+        }
+        for(int i = startx*cell_size; i < endx*cell_size; i += cell_size){
+            DrawLine(i, starty, i, endy*cell_size, lines);
+        }
+        for(int i = starty*cell_size; i < endy*cell_size; i += cell_size){
+            DrawLine(startx, i, endx*cell_size, i, lines);
         }
 
         EndMode2D();
@@ -355,7 +355,7 @@ int main(){
                 for(int i = 0; i < 5; i++){
                     Color col = btnc;
                     if(buttonHover(btns[i])) col = hoverc;
-                    DrawRectangleRec(btns[i], col);
+                    DrawRectangleRounded(btns[i], 0.2f, 32, col);
                 }
                 DrawText("tools", btn1.x+33, btn1.y+10, 20, textc);
                 DrawText("patterns", btn2.x+13, btn2.y+10, 20, textc);
@@ -368,7 +368,7 @@ int main(){
                     if(i==5) i+=5;
                     Color col = btnc;
                     if(buttonHover(btns[i]) || (toolSel == i)) col = hoverc;
-                    DrawRectangleRec(btns[i], col);
+                    DrawRectangleRounded(btns[i], 0.2f, 32, col);
                 }
                 DrawText("brush", btn1.x+30, btn1.y+10, 20, textc);
                 DrawText("erase", btn2.x+30, btn2.y+10, 20, textc);
@@ -381,7 +381,7 @@ int main(){
                 for(int i = 0; i < 11; i++){
                     Color col = btnc;
                     if(buttonHover(btns[i]) || patSel == i) col = hoverc;
-                    DrawRectangleRec(btns[i], col);
+                    DrawRectangleRounded(btns[i], 0.2f, 32, col);
                 }
                 DrawText("normal", btn1.x+28, btn1.y+10, 20, textc);
                 DrawText("glider", btn2.x+33, btn2.y+10, 20, textc);
@@ -414,8 +414,8 @@ int main(){
                         DrawLine(x1, y1, x2, y2, textc);
                     }
                 }
-                if(buttonHover(btn11)) DrawRectangleRec(btn11, hoverc);
-                else DrawRectangleRec(btn11, btnc);
+                if(buttonHover(btn11)) DrawRectangleRounded(btn11, 0.2f, 32, hoverc);
+                else DrawRectangleRounded(btn11, 0.2f, 32, btnc);
                 DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
                 break;
                 case load:
@@ -423,11 +423,11 @@ int main(){
                     Rectangle btn = btns[i];
                     Color col = btnc;
                     if(buttonHover(btn)) col = hoverc;
-                    DrawRectangleRec(btn, col);
+                    DrawRectangleRounded(btn, 0.2f, 32, col);
                     DrawText(files[i].c_str(), btn.x+5, btn.y+10, 20, textc);
                 }
-                if(buttonHover(btn11)) DrawRectangleRec(btn11, hoverc);
-                else DrawRectangleRec(btn11, btnc);
+                if(buttonHover(btn11)) DrawRectangleRounded(btn11, 0.2f, 32, hoverc);
+                else DrawRectangleRounded(btn11, 0.2f, 32, btnc);
                 DrawText("back", btn11.x+35, btn11.y+8, 20, textc);
                 break;
             }
@@ -520,7 +520,7 @@ int main(){
                     }
                     else if(buttonClick(btn4) && !running){
                         string filen;
-                        for(int n = 1; n < files.size(); n++){
+                        for(int n = 1; n < 11; n++){
                             filen = "saves/save" + to_string(n) + ".life";
                             if(!filesystem::exists(filen)) break;
                         }
@@ -626,7 +626,7 @@ int main(){
                     if(buttonClick(btn11)){
                         currPanel = def;
                     }
-                    for(int i = 0; i < 10; i++){
+                    for(int i = 0; i < files.size(); i++){
                         if(buttonClick(btns[i])){
                             loadFile("saves/"+files[i]);
                             break;
