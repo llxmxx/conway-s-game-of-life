@@ -81,6 +81,7 @@ bool selDone = false;
 vector<int> populationGraph;
 
 unordered_set<cell, cell_hash> livecells;
+unordered_set<cell, cell_hash> hovercells;
 vector<cell> selection;
 vector<state> acts;
 
@@ -194,7 +195,7 @@ void currState(unordered_set<cell, cell_hash> livecells, tool currTool, panels c
     curract++;
 }
 
-void drawPattern(cell c, pattern curr){
+void drawPattern(cell c, pattern curr, unordered_set<cell, cell_hash> &cells){
     int n = pat[curr].size();
     for(int i = 0; i < n; i++){
         cell nc;
@@ -221,7 +222,7 @@ void drawPattern(cell c, pattern curr){
             y*=-1;
         }
         nc = {c.x+x, c.y+y};
-        livecells.emplace(nc);
+        cells.emplace(nc);
         if(curr == selpat) selection.emplace_back(nc);
     }
 }
@@ -248,7 +249,7 @@ void transformSel(){
     cell mid = formPattern(selpat);
     for(cell c : selection) livecells.erase(c);
     selection.clear();
-    drawPattern(mid, selpat);
+    drawPattern(mid, selpat, livecells);
 }
 
 void drawSelBox(cell startc){
@@ -341,6 +342,9 @@ int main(){
                 DrawRectangle(c.x*cell_size, c.y*cell_size, cell_size, cell_size, selc);
             }
         }
+        for(cell c : hovercells){
+            DrawRectangle(c.x*cell_size, c.y*cell_size, cell_size, cell_size, selc);
+        }
         for(int i = startx*cell_size; i < endx*cell_size; i += cell_size){
             DrawLine(i, starty, i, endy*cell_size, lines);
         }
@@ -348,7 +352,7 @@ int main(){
             DrawLine(startx, i, endx*cell_size, i, lines);
         }
         if(currTool == sel && !selDone && dragging) drawSelBox(startc);
-        else{
+        else if(currPattern == nor){
             cell curr = getCell();
             DrawRectangle(curr.x*cell_size, curr.y*cell_size, cell_size, cell_size, selc);
         }
@@ -458,17 +462,29 @@ int main(){
         wheel = GetMouseWheelMove();
         live = livecells.size();
         peak = (live > peak ? live : peak);
+        
+        if(selection.empty()) selDone = false;
 
         if(populationGraph.size() > 500){
             populationGraph.erase(populationGraph.begin());
         }
 
+        hovercells.clear();
+
         switch(currTool){
-            case brush:
+            case brush:{
             toolSel = 0;
+            if(currPattern == nor) {
+                cell c = getCell();
+                hovercells.emplace(c);
+            }
+            }
             break;
-            case erase:
+            case erase:{
             toolSel = 1;
+            cell c = getCell();
+            hovercells.emplace(c);
+            }
             break;
             case rect:
             toolSel = 2;
@@ -484,32 +500,59 @@ int main(){
             case nor:
             patSel = 0;
             break;
-            case glider:
+            case glider:{
             patSel = 1;
+            cell c = getCell();
+            drawPattern(c, glider, hovercells);
+            }
             break;
-            case lwss:
+            case lwss:{
             patSel = 2;
+            cell c = getCell();
+            drawPattern(c, lwss, hovercells);
+            }
             break;
-            case mwss:
+            case mwss:{
             patSel = 3;
+            cell c = getCell();
+            drawPattern(c, mwss, hovercells);
+            }
             break;
-            case hwss:
+            case hwss:{
             patSel = 4;
+            cell c = getCell();
+            drawPattern(c, hwss, hovercells);
+            }
             break;
-            case gosper:
+            case gosper:{
             patSel = 5;
+            cell c = getCell();
+            drawPattern(c, gosper, hovercells);
+            }
             break;
-            case pulsar:
+            case pulsar:{
             patSel = 6;
+            cell c = getCell();
+            drawPattern(c, pulsar, hovercells);
+            }
             break;
-            case pdthlon:
+            case pdthlon:{
             patSel = 7;
+            cell c = getCell();
+            drawPattern(c, pdthlon, hovercells);
+            }
             break;
-            case acorn:
+            case acorn:{
             patSel = 8;
+            cell c = getCell();
+            drawPattern(c, acorn, hovercells);
+            }
             break;
-            case rpento:
+            case rpento:{
             patSel = 9;
+            cell c = getCell();
+            drawPattern(c, rpento, hovercells);
+            }
             break;
         }
 
@@ -666,7 +709,7 @@ int main(){
                     currTool = brush;
                     dragging = false;
                     cell c = getCell();
-                    drawPattern(c, currPattern);
+                    drawPattern(c, currPattern, livecells);
                 }
             }
         }
@@ -681,6 +724,27 @@ int main(){
                 case erase:
                 livecells.erase(c);
                 break;
+                case rect:
+                for(int x = min(startc.x, c.x); x <= max(startc.x, c.x); x++){
+                    for(int y = min(startc.y, c.y); y <= max(startc.y, c.y); y++){
+                        cell curr = {x, y};
+                        hovercells.emplace(curr);
+                    }
+                }
+                break;
+                case line:{
+                    float dx = startc.x - c.x, dy = startc.y - c.y;
+                    int steps = max(abs(dx), abs(dy));
+                    if (steps == 0) break;
+                    dx /= steps;
+                    dy /= steps;
+                    for(int i = 0; i < abs(steps); i++){
+                        float x = startc.x-dx*i, y = startc.y-dy*i;
+                        cell curr = {(int)round(x), (int)round(y)};
+                        hovercells.emplace(curr);
+                    }
+                    break;
+                }
             }
         }
 
@@ -807,7 +871,7 @@ int main(){
 
         if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_V)){
             cell c = getCell();
-            drawPattern(c, cop);
+            drawPattern(c, cop, livecells);
             currState(livecells, currTool, currPanel, currPattern, camera);
         }
 
