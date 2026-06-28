@@ -251,6 +251,14 @@ void transformSel(){
     drawPattern(mid, selpat);
 }
 
+void drawSelBox(cell startc){
+    Vector2 mouse = GetScreenToWorld2D(GetMousePosition(), camera);
+    float x = min((float)startc.x*cell_size, mouse.x), y = min((float)startc.y*cell_size, mouse.y);
+    float w = max((float)startc.x*cell_size, mouse.x) - x, h = max((float)startc.y*cell_size, mouse.y) - y;
+    Rectangle selLines = {x, y, w, h};
+    DrawRectangleLinesEx(selLines, 5.0f, selc);
+}
+
 int main(){
     reset();
 
@@ -323,8 +331,6 @@ int main(){
 
         BeginMode2D(camera);
 
-        cell curr = getCell();
-        DrawRectangle(curr.x*cell_size, curr.y*cell_size, cell_size, cell_size, selc);
         for(cell c : livecells){
             if(startx <= c.x < endx && starty <= c.y < endy){
                 DrawRectangle(c.x*cell_size, c.y*cell_size, cell_size, cell_size, cellc);
@@ -340,6 +346,11 @@ int main(){
         }
         for(int i = starty*cell_size; i < endy*cell_size; i += cell_size){
             DrawLine(startx, i, endx*cell_size, i, lines);
+        }
+        if(currTool == sel && !selDone && dragging) drawSelBox(startc);
+        else{
+            cell curr = getCell();
+            DrawRectangle(curr.x*cell_size, curr.y*cell_size, cell_size, cell_size, selc);
         }
 
         EndMode2D();
@@ -575,42 +586,52 @@ int main(){
                     case patterns:
                     if(buttonClick(btn1)){
                         currPattern = nor;
+                        currTool = brush;
                         resetHm();
                     }
                     else if(buttonClick(btn2)){
                         currPattern = glider;
+                        currTool = brush;
                         resetHm();
                     }
                     else if(buttonClick(btn3)){
                         currPattern = lwss;
+                        currTool = brush;
                         resetHm();
                     }
                     else if(buttonClick(btn4)){
                         currPattern = mwss;
+                        currTool = brush;
                         resetHm();
                     }
                     else if(buttonClick(btn5)){
                         currPattern = hwss;
+                        currTool = brush;
                         resetHm();
                     }
                     else if(buttonClick(btn6)){
                         currPattern = gosper;
+                        currTool = brush;
                         resetHm();
                     }
                     else if(buttonClick(btn7)){
                         currPattern = pulsar;
+                        currTool = brush;
                         resetHm();
                     }
                     else if(buttonClick(btn8)){
                         currPattern = pdthlon;
+                        currTool = brush;
                         resetHm();
                     }
                     else if(buttonClick(btn9)){
                         currPattern = acorn;
+                        currTool = brush;
                         resetHm();
                     }
                     else if(buttonClick(btn10)){
                         currPattern = rpento;
+                        currTool = brush;
                         resetHm();
                     }
                     else if(buttonClick(btn11)){
@@ -638,7 +659,7 @@ int main(){
             }
             if((!isPanelOpen || !buttonClick(panel)) && !buttonClick(panelBtn)){
                 dragging = true;
-                if(currTool == sel){
+                if(currTool == sel || currTool == rect || currTool == line){
                     startc = getCell();
                 }
                 else if(currPattern != nor){
@@ -646,9 +667,6 @@ int main(){
                     dragging = false;
                     cell c = getCell();
                     drawPattern(c, currPattern);
-                }
-                else if(currTool == rect || currTool == line){
-                    startc = getCell();
                 }
             }
         }
