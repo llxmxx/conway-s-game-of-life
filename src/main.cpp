@@ -346,13 +346,25 @@ int main(){
             DrawRectangle(c.x*cell_size, c.y*cell_size, cell_size, cell_size, selc);
         }
         for(int i = startx*cell_size; i < endx*cell_size; i += cell_size){
-            DrawLine(i, starty, i, endy*cell_size, lines);
+            Color gridcol = lines;
+            int a;
+            if(camera.zoom < 0.75f) a = 0;
+            else if(camera.zoom >= 2.75f) a = 255;
+            else a = camera.zoom/2.75 * 255;
+            gridcol.a = a;
+            DrawLine(i, starty, i, endy*cell_size, gridcol);
         }
         for(int i = starty*cell_size; i < endy*cell_size; i += cell_size){
-            DrawLine(startx, i, endx*cell_size, i, lines);
+            Color gridcol = lines;
+            int a;
+            if(camera.zoom < 0.75) a = 0;
+            else if(camera.zoom >= 4.0) a = 255;
+            else a = camera.zoom/4.0f * 255;
+            gridcol.a = a;
+            DrawLine(startx, i, endx*cell_size, i, gridcol);
         }
         if(currTool == sel && !selDone && dragging) drawSelBox(startc);
-        else if(currPattern == nor){
+        else if(currPattern == nor && currTool == brush || currTool == erase){
             cell curr = getCell();
             DrawRectangle(curr.x*cell_size, curr.y*cell_size, cell_size, cell_size, selc);
         }
@@ -702,7 +714,13 @@ int main(){
             }
             if((!isPanelOpen || !buttonClick(panel)) && !buttonClick(panelBtn)){
                 dragging = true;
-                if(currTool == sel || currTool == rect || currTool == line){
+                if(currTool == sel){
+                    startc = getCell();
+                    if(selDone){
+                        for(cell c : selection) livecells.erase(c);
+                    }
+                }
+                else if(currTool == rect || currTool == line){
                     startc = getCell();
                 }
                 else if(currPattern != nor){
@@ -745,6 +763,18 @@ int main(){
                     }
                     break;
                 }
+                case sel:
+                if(selDone){
+                    vector<cell> temp = selection;
+                    selection.clear();
+                    int dx = c.x-startc.x, dy = c.y-startc.y;
+                    for(int i = 0; i < temp.size(); i++){
+                        cell curr = temp[i];
+                        cell nc = {curr.x+dx, curr.y+dy};
+                        selection.emplace_back(nc);
+                    }
+                    startc = c;
+                }
             }
         }
 
@@ -786,17 +816,8 @@ int main(){
                         }
                     }
                     else{
-                        vector<cell> temp = selection;
-                        selection.clear();
-                        for(cell c : temp) livecells.erase(c);
-                        int dx = endc.x-startc.x, dy = endc.y-startc.y;
-                        for(int i = 0; i < temp.size(); i++){
-                            cell c = temp[i];
-                            cell nc = {c.x+dx, c.y+dy};
-                            selection.emplace_back(nc);
-                            livecells.emplace(nc);
-                        }
-                    }
+                        for(cell c : selection) livecells.emplace(c);
+                    }               
                 }
                 dragging = false;
             }
