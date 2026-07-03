@@ -53,7 +53,7 @@ Color btnc = {51, 65, 85, 255};
 Color cellc = {226, 232, 240, 255};
 Color textc = {248, 250, 252, 255};
 Color selc = {71, 85, 105, 255};
-Color hoverc = {51, 65, 85, 200};
+Color hoverc = {187, 225, 250, 200};
 
 map<pattern, vector<cell>> pat = {
     {glider, {{0, -1}, {1, 0}, {-1, 1}, {0, 1}, {1, 1}}},
@@ -260,6 +260,11 @@ void drawSelBox(cell startc){
     DrawRectangleLinesEx(selLines, 5.0f, selc);
 }
 
+void animatePanel(float &x, bool open, float openx, float closedx){
+    float target = open ? openx : closedx;
+    x += (target - x) * 0.18f;
+}
+
 int main(){
     reset();
 
@@ -272,6 +277,7 @@ int main(){
     float timer = 0.0f;
     float interval = 0.1f;
     float wheel = 0;
+    float panelx = screenw;
 
     camera.offset = {screenw/2.0f, screenh/2.0f};
     camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
@@ -283,30 +289,7 @@ int main(){
     start.camera.zoom = 1.0f;
     acts.emplace_back(start);
 
-    Rectangle panel = {screenw-200, 0, 200, screenh};
-    Rectangle panelBtn = {screenw-10, screenh-100, 10, 20};
-
-    float btnx = panel.x + 40;
-    float btnw = 120, btnh = 40;
-
-    Rectangle btn1 = {btnx, 30, btnw, btnh};
-    Rectangle btn2 = {btnx, 100, btnw, btnh};
-    Rectangle btn3 = {btnx, 170, btnw, btnh};
-    Rectangle btn4 = {btnx, 240, btnw, btnh};
-    Rectangle btn5 = {btnx, 310, btnw, btnh};
-    Rectangle btn6 = {btnx, 380, btnw, btnh};
-    Rectangle btn7 = {btnx, 450, btnw, btnh};
-    Rectangle btn8 = {btnx, 520, btnw, btnh};
-    Rectangle btn9 = {btnx, 590, btnw, btnh};
-    Rectangle btn10 = {btnx, 660, btnw, btnh};
-    Rectangle btn11 = {btnx, 730, btnw, btnh};
-
     int patSel = 0, toolSel = 0;
-
-    vector<Rectangle> btns = {btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10, btn11};
-
-    int graphx = panel.x+5, graphy = btn4.y;
-    int graphw = 190, graphh = 380;
 
     vector<string> files;
 
@@ -366,102 +349,130 @@ int main(){
         if(currTool == sel && !selDone && dragging) drawSelBox(startc);
         else if(currPattern == nor && currTool == brush || currTool == erase){
             cell curr = getCell();
-            DrawRectangle(curr.x*cell_size, curr.y*cell_size, cell_size, cell_size, selc);
+            DrawRectangle(curr.x*cell_size, curr.y*cell_size, cell_size, cell_size, hoverc);
         }
 
         EndMode2D();
 
         checkBounds();
-        if(isPanelOpen){
-            DrawRectangleRec(panel, bg);
-            if(buttonHover(panelBtn)) DrawRectangleRec(panelBtn, hoverc);
-            else DrawRectangleRec(panelBtn, btnc);
-            DrawText(">", panelBtn.x+3, panelBtn.y, 20, textc);
-            switch(currPanel){
-                case def:
-                for(int i = 0; i < 5; i++){
-                    Color col = btnc;
-                    if(buttonHover(btns[i])) col = hoverc;
-                    DrawRectangleRounded(btns[i], 0.2f, 32, col);
-                }
-                DrawText("tools", btn1.x+33, btn1.y+10, 20, textc);
-                DrawText("patterns", btn2.x+13, btn2.y+10, 20, textc);
-                DrawText("stats", btn3.x+33, btn3.y+10, 20, textc);
-                DrawText("save", btn4.x+37, btn4.y+10, 20, textc);
-                DrawText("load", btn5.x+40, btn5.y+10, 20, textc);
-                break;
-                case tools:
-                for(int i = 0; i < 11; i++){
-                    if(i==5) i+=5;
-                    Color col = btnc;
-                    if(buttonHover(btns[i]) || (toolSel == i)) col = hoverc;
-                    DrawRectangleRounded(btns[i], 0.2f, 32, col);
-                }
-                DrawText("brush", btn1.x+30, btn1.y+10, 20, textc);
-                DrawText("erase", btn2.x+30, btn2.y+10, 20, textc);
-                DrawText("rect", btn3.x+37, btn3.y+10, 20, textc);
-                DrawText("line", btn4.x+43, btn4.y+10, 20, textc);
-                DrawText("select", btn5.x+28, btn5.y+10, 20, textc);
-                DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
-                break;
-                case patterns:
-                for(int i = 0; i < 11; i++){
-                    Color col = btnc;
-                    if(buttonHover(btns[i]) || patSel == i) col = hoverc;
-                    DrawRectangleRounded(btns[i], 0.2f, 32, col);
-                }
-                DrawText("normal", btn1.x+28, btn1.y+10, 20, textc);
-                DrawText("glider", btn2.x+33, btn2.y+10, 20, textc);
-                DrawText("lwss", btn3.x+1+40, btn3.y+10, 20, textc);
-                DrawText("mwss", btn4.x+1+37, btn4.y+10, 20, textc);
-                DrawText("hwss", btn5.x+1+37, btn5.y+10, 20, textc);
-                DrawText("gosper", btn6.x+28, btn6.y+10, 20, textc);
-                DrawText("pulsar", btn7.x+28, btn7.y+10, 20, textc);
-                DrawText("pdthlon", btn8.x+23, btn8.y+10, 20, textc);
-                DrawText("acorn", btn9.x+31, btn9.y+10, 20, textc);
-                DrawText("rpento", btn10.x+27, btn10.y+10, 20, textc);
-                DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
-                break;
-                case stats:
-                DrawText(TextFormat("peak\npopulation: %d", peak), btnx-10, btn1.y, 20, textc);
-                if (livecells.empty()) DrawText("bounding box:\n0 x 0", btnx-10, btn2.y, 20, textc);
-                else DrawText(TextFormat("bounding box:\n%d x %d", maxx-minx+1, maxy-miny+1), btnx-10, btn2.y, 20, textc);
-                if(gen) DrawText(TextFormat("avg population: \n%d", total/gen), btnx-10, btn3.y, 20, textc);
-                else DrawText("avg population: \n0", btnx-10, btn3.y, 20, textc);
-                if(populationGraph.size() > 1){
-                    int maxPop = 1;
-                    for(int p : populationGraph){
-                        maxPop = max(maxPop, p);
-                    }
-                    for(int i = 1; i < populationGraph.size(); i++){
-                        float x1 = graphx + (float)(i-1) * graphw/(populationGraph.size()-1);
-                        float y1 = graphy + graphh - (float)populationGraph[i-1]*graphh/maxPop;
-                        float x2 = graphx + (float)i * graphw/(populationGraph.size()-1);
-                        float y2 = graphy + graphh - (float)populationGraph[i]*graphh/maxPop;
-                        DrawLine(x1, y1, x2, y2, textc);
-                    }
-                }
-                if(buttonHover(btn11)) DrawRectangleRounded(btn11, 0.2f, 32, hoverc);
-                else DrawRectangleRounded(btn11, 0.2f, 32, btnc);
-                DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
-                break;
-                case load:
-                for(int i = 0; i < files.size(); i++){
-                    Rectangle btn = btns[i];
-                    Color col = btnc;
-                    if(buttonHover(btn)) col = hoverc;
-                    DrawRectangleRounded(btn, 0.2f, 32, col);
-                    DrawText(files[i].c_str(), btn.x+5, btn.y+10, 20, textc);
-                }
-                if(buttonHover(btn11)) DrawRectangleRounded(btn11, 0.2f, 32, hoverc);
-                else DrawRectangleRounded(btn11, 0.2f, 32, btnc);
-                DrawText("back", btn11.x+35, btn11.y+8, 20, textc);
-                break;
+        
+        animatePanel(panelx, isPanelOpen, screenw-200.0, screenw);
+        Rectangle panel = {panelx, 0, 200, screenh};
+        Rectangle panelBtn = {screenw-10, screenh-100, 10, 20};
+
+        float btnx = panel.x + 40;
+        float btnw = 120, btnh = 40;
+
+        Rectangle btn1 = {btnx, 30, btnw, btnh};
+        Rectangle btn2 = {btnx, 100, btnw, btnh};
+        Rectangle btn3 = {btnx, 170, btnw, btnh};
+        Rectangle btn4 = {btnx, 240, btnw, btnh};
+        Rectangle btn5 = {btnx, 310, btnw, btnh};
+        Rectangle btn6 = {btnx, 380, btnw, btnh};
+        Rectangle btn7 = {btnx, 450, btnw, btnh};
+        Rectangle btn8 = {btnx, 520, btnw, btnh};
+        Rectangle btn9 = {btnx, 590, btnw, btnh};
+        Rectangle btn10 = {btnx, 660, btnw, btnh};
+        Rectangle btn11 = {btnx, 730, btnw, btnh};
+
+        vector<Rectangle> btns = {btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btn10, btn11};
+
+        int graphx = panel.x+5, graphy = btn4.y;
+        int graphw = 190, graphh = 380;
+
+        DrawRectangleRec(panel, bg);
+
+        if(buttonHover(panelBtn)){
+            DrawRectangleRec(panelBtn, selc);
+        }
+        else DrawRectangleRec(panelBtn, btnc);
+
+        switch(currPanel){
+            case def:
+            for(int i = 0; i < 5; i++){
+                Color col = btnc;
+                if(buttonHover(btns[i])) col = selc;
+                DrawRectangleRounded(btns[i], 0.2f, 32, col);
             }
+            DrawText("tools", btn1.x+33, btn1.y+10, 20, textc);
+            DrawText("patterns", btn2.x+13, btn2.y+10, 20, textc);
+            DrawText("stats", btn3.x+33, btn3.y+10, 20, textc);
+            DrawText("save", btn4.x+37, btn4.y+10, 20, textc);
+            DrawText("load", btn5.x+40, btn5.y+10, 20, textc);
+            break;
+            case tools:
+            for(int i = 0; i < 11; i++){
+                if(i==5) i+=5;
+                Color col = btnc;
+                if(buttonHover(btns[i]) || (toolSel == i)) col = selc;
+                DrawRectangleRounded(btns[i], 0.2f, 32, col);
+            }
+            DrawText("brush", btn1.x+30, btn1.y+10, 20, textc);
+            DrawText("erase", btn2.x+30, btn2.y+10, 20, textc);
+            DrawText("rect", btn3.x+37, btn3.y+10, 20, textc);
+            DrawText("line", btn4.x+43, btn4.y+10, 20, textc);
+            DrawText("select", btn5.x+28, btn5.y+10, 20, textc);
+            DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
+            break;
+            case patterns:
+            for(int i = 0; i < 11; i++){
+                Color col = btnc;
+                if(buttonHover(btns[i]) || patSel == i) col = selc;
+                DrawRectangleRounded(btns[i], 0.2f, 32, col);
+            }
+            DrawText("normal", btn1.x+28, btn1.y+10, 20, textc);
+            DrawText("glider", btn2.x+33, btn2.y+10, 20, textc);
+            DrawText("lwss", btn3.x+1+40, btn3.y+10, 20, textc);
+            DrawText("mwss", btn4.x+1+37, btn4.y+10, 20, textc);
+            DrawText("hwss", btn5.x+1+37, btn5.y+10, 20, textc);
+            DrawText("gosper", btn6.x+28, btn6.y+10, 20, textc);
+            DrawText("pulsar", btn7.x+28, btn7.y+10, 20, textc);
+            DrawText("pdthlon", btn8.x+23, btn8.y+10, 20, textc);
+            DrawText("acorn", btn9.x+31, btn9.y+10, 20, textc);
+            DrawText("rpento", btn10.x+27, btn10.y+10, 20, textc);
+            DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
+            break;
+            case stats:
+            DrawText(TextFormat("peak\npopulation: %d", peak), btnx-10, btn1.y, 20, textc);
+            if (livecells.empty()) DrawText("bounding box:\n0 x 0", btnx-10, btn2.y, 20, textc);
+            else DrawText(TextFormat("bounding box:\n%d x %d", maxx-minx+1, maxy-miny+1), btnx-10, btn2.y, 20, textc);
+            if(gen) DrawText(TextFormat("avg population: \n%d", total/gen), btnx-10, btn3.y, 20, textc);
+            else DrawText("avg population: \n0", btnx-10, btn3.y, 20, textc);
+            if(populationGraph.size() > 1){
+                int maxPop = 1;
+                for(int p : populationGraph){
+                    maxPop = max(maxPop, p);
+                }
+                for(int i = 1; i < populationGraph.size(); i++){
+                    float x1 = graphx + (float)(i-1) * graphw/(populationGraph.size()-1);
+                    float y1 = graphy + graphh - (float)populationGraph[i-1]*graphh/maxPop;
+                    float x2 = graphx + (float)i * graphw/(populationGraph.size()-1);
+                    float y2 = graphy + graphh - (float)populationGraph[i]*graphh/maxPop;
+                    DrawLine(x1, y1, x2, y2, textc);
+                }
+            }
+            if(buttonHover(btn11)) DrawRectangleRounded(btn11, 0.2f, 32, selc);
+            else DrawRectangleRounded(btn11, 0.2f, 32, btnc);
+            DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
+            break;
+            case load:
+            for(int i = 0; i < files.size(); i++){
+                Rectangle btn = btns[i];
+                Color col = btnc;
+                if(buttonHover(btn)) col = selc;
+                DrawRectangleRounded(btn, 0.2f, 32, col);
+                DrawText(files[i].c_str(), btn.x+5, btn.y+10, 20, textc);
+            }
+            if(buttonHover(btn11)) DrawRectangleRounded(btn11, 0.2f, 32, selc);
+            else DrawRectangleRounded(btn11, 0.2f, 32, btnc);
+            DrawText("back", btn11.x+35, btn11.y+8, 20, textc);
+            break;
+        }
+
+        if(isPanelOpen){
+            DrawText(">", panelBtn.x+3, panelBtn.y, 20, textc);
         }
         else{
-            if(buttonHover(panelBtn)) DrawRectangleRec(panelBtn, hoverc);
-            else DrawRectangleRec(panelBtn, btnc);
             DrawText("<", panelBtn.x+1, panelBtn.y, 20, textc);
         }
 
