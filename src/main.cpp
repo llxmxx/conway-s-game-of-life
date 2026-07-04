@@ -278,6 +278,8 @@ void drawCenteredText(string text, Rectangle r, int fontSize, Color color){
 }
 
 int main(){
+    filesystem::create_directory("saves");
+
     reset();
 
     bool running = false;
