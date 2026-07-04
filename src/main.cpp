@@ -38,6 +38,16 @@ struct state{
     Camera2D camera = {0};
 };
 
+struct Theme{
+    Color bg;
+    Color lines;
+    Color btnc;
+    Color cellc;
+    Color textc;
+    Color selc;
+    Color hoverc;
+};
+
 state start;
 
 const int cell_size = 20;
@@ -47,13 +57,10 @@ const int screenh = 800;
 int rows = 2000; //screenw/cell_size;
 int cols = 2000; //screenh/cell_size;
 
-Color bg = {15, 23, 42, 255};
-Color lines = {37, 47, 53, 255};
-Color btnc = {51, 65, 85, 255};
-Color cellc = {226, 232, 240, 255};
-Color textc = {248, 250, 252, 255};
-Color selc = {71, 85, 105, 255};
-Color hoverc = {187, 225, 250, 200};
+Theme dark = {{15, 23, 42, 255}, {37, 47, 53, 255}, {51, 65, 85, 255}, {226, 232, 240, 255}, {248, 250, 252, 255}, {71, 85, 105, 255}, {187, 225, 250, 200}};
+Theme light = {{245, 245, 245, 255}, {205, 205, 205, 255}, {220, 220, 220, 255}, {35, 35, 35, 255}, {40, 40, 40, 255}, {0, 120, 255, 255}, {0, 120, 255, 100}};
+
+Theme *theme = &dark;
 
 map<pattern, vector<cell>> pat = {
     {glider, {{0, -1}, {1, 0}, {-1, 1}, {0, 1}, {1, 1}}},
@@ -257,7 +264,7 @@ void drawSelBox(cell startc){
     float x = min((float)startc.x*cell_size, mouse.x), y = min((float)startc.y*cell_size, mouse.y);
     float w = max((float)startc.x*cell_size, mouse.x) - x, h = max((float)startc.y*cell_size, mouse.y) - y;
     Rectangle selLines = {x, y, w, h};
-    DrawRectangleLinesEx(selLines, 5.0f, selc);
+    DrawRectangleLinesEx(selLines, 5.0f, theme->selc);
 }
 
 void animatePanel(float &x, bool open, float openx, float closedx){
@@ -300,6 +307,14 @@ int main(){
     InitWindow(screenw, screenh, "conway's game of life");
 
     while(!WindowShouldClose()){
+
+        Color bg = theme->bg;
+        Color btnc = theme->btnc;
+        Color cellc = theme->cellc;
+        Color hoverc = theme->hoverc;
+        Color lines = theme->lines;
+        Color selc = theme->selc;
+        Color textc = theme->textc;
 
         Vector2 topleft = GetScreenToWorld2D({0, 0}, camera);
         Vector2 bottomright = GetScreenToWorld2D({(float)screenw, (float)screenh}, camera);
@@ -389,7 +404,7 @@ int main(){
 
         switch(currPanel){
             case def:
-            for(int i = 0; i < 5; i++){
+            for(int i = 0; i < 6; i++){
                 Color col = btnc;
                 if(buttonHover(btns[i])) col = selc;
                 DrawRectangleRounded(btns[i], 0.2f, 32, col);
@@ -399,6 +414,7 @@ int main(){
             DrawText("stats", btn3.x+33, btn3.y+10, 20, textc);
             DrawText("save", btn4.x+37, btn4.y+10, 20, textc);
             DrawText("load", btn5.x+40, btn5.y+10, 20, textc);
+            DrawText("theme", btn6.x+33, btn6.y+10, 20, textc);
             break;
             case tools:
             for(int i = 0; i < 11; i++){
@@ -617,6 +633,10 @@ int main(){
                         files.clear();
                         for(auto file : filesystem::directory_iterator("saves")) files.emplace_back(file.path().filename().string());
                         while(files.size() > 10) files.erase(files.begin());
+                    }
+                    else if(buttonClick(btn6)){
+                        if(theme == &dark) theme = &light;
+                        else theme = &dark;
                     }
                     break;
                     case tools:
