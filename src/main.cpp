@@ -54,8 +54,8 @@ const int cell_size = 20;
 const int screenw = 1200;
 const int screenh = 800;
 
-int rows = 2000; //screenw/cell_size;
-int cols = 2000; //screenh/cell_size;
+int rows = 2000;
+int cols = 2000;
 
 Theme dark = {{15, 23, 42, 255}, {37, 47, 53, 255}, {51, 65, 85, 255}, {226, 232, 240, 255}, {248, 250, 252, 255}, {71, 85, 105, 255}, {187, 225, 250, 200}};
 Theme light = {{245, 245, 245, 255}, {205, 205, 205, 255}, {220, 220, 220, 255}, {35, 35, 35, 255}, {40, 40, 40, 255}, {0, 120, 255, 255}, {0, 120, 255, 100}};
@@ -272,6 +272,11 @@ void animatePanel(float &x, bool open, float openx, float closedx){
     x += (target - x) * 0.18f;
 }
 
+void drawCenteredText(string text, Rectangle r, int fontSize, Color color){
+    int w = MeasureText(text.c_str(), fontSize);
+    DrawText(text.c_str(), r.x+(r.width-w)/2, r.y+(r.height-fontSize)/2, fontSize, color);
+}
+
 int main(){
     reset();
 
@@ -285,6 +290,11 @@ int main(){
     float interval = 0.1f;
     float wheel = 0;
     float panelx = screenw;
+
+    string toast;
+    float toastTime = 0;
+    const float toastDuration = 1.5f;
+    float toasty = -45;
 
     camera.offset = {screenw/2.0f, screenh/2.0f};
     camera.target = {rows*cell_size/2.0f, cols*cell_size/2.0f};
@@ -409,12 +419,12 @@ int main(){
                 if(buttonHover(btns[i])) col = selc;
                 DrawRectangleRounded(btns[i], 0.2f, 32, col);
             }
-            DrawText("tools", btn1.x+33, btn1.y+10, 20, textc);
-            DrawText("patterns", btn2.x+13, btn2.y+10, 20, textc);
-            DrawText("stats", btn3.x+33, btn3.y+10, 20, textc);
-            DrawText("save", btn4.x+37, btn4.y+10, 20, textc);
-            DrawText("load", btn5.x+40, btn5.y+10, 20, textc);
-            DrawText("theme", btn6.x+33, btn6.y+10, 20, textc);
+            drawCenteredText("tools", btn1, 20, textc);
+            drawCenteredText("patterns", btn2, 20, textc);
+            drawCenteredText("stats", btn3, 20, textc);
+            drawCenteredText("save", btn4, 20, textc);
+            drawCenteredText("load", btn5, 20, textc);
+            drawCenteredText("theme", btn6, 20, textc);
             break;
             case tools:
             for(int i = 0; i < 11; i++){
@@ -423,12 +433,12 @@ int main(){
                 if(buttonHover(btns[i]) || (toolSel == i)) col = selc;
                 DrawRectangleRounded(btns[i], 0.2f, 32, col);
             }
-            DrawText("brush", btn1.x+30, btn1.y+10, 20, textc);
-            DrawText("erase", btn2.x+30, btn2.y+10, 20, textc);
-            DrawText("rect", btn3.x+37, btn3.y+10, 20, textc);
-            DrawText("line", btn4.x+43, btn4.y+10, 20, textc);
-            DrawText("select", btn5.x+28, btn5.y+10, 20, textc);
-            DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
+            drawCenteredText("brush", btn1, 20, textc);
+            drawCenteredText("erase", btn2, 20, textc);
+            drawCenteredText("rect", btn3, 20, textc);
+            drawCenteredText("line", btn4, 20, textc);
+            drawCenteredText("select", btn5, 20, textc);
+            drawCenteredText("back", btn11, 20, textc);
             break;
             case patterns:
             for(int i = 0; i < 11; i++){
@@ -436,24 +446,24 @@ int main(){
                 if(buttonHover(btns[i]) || patSel == i) col = selc;
                 DrawRectangleRounded(btns[i], 0.2f, 32, col);
             }
-            DrawText("normal", btn1.x+28, btn1.y+10, 20, textc);
-            DrawText("glider", btn2.x+33, btn2.y+10, 20, textc);
-            DrawText("lwss", btn3.x+1+40, btn3.y+10, 20, textc);
-            DrawText("mwss", btn4.x+1+37, btn4.y+10, 20, textc);
-            DrawText("hwss", btn5.x+1+37, btn5.y+10, 20, textc);
-            DrawText("gosper", btn6.x+28, btn6.y+10, 20, textc);
-            DrawText("pulsar", btn7.x+28, btn7.y+10, 20, textc);
-            DrawText("pdthlon", btn8.x+23, btn8.y+10, 20, textc);
-            DrawText("acorn", btn9.x+31, btn9.y+10, 20, textc);
-            DrawText("rpento", btn10.x+27, btn10.y+10, 20, textc);
-            DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
+            drawCenteredText("normal", btn1, 20, textc);
+            drawCenteredText("glider", btn2, 20, textc);
+            drawCenteredText("lwss", btn3, 20, textc);
+            drawCenteredText("mwss", btn4, 20, textc);
+            drawCenteredText("hwss", btn5, 20, textc);
+            drawCenteredText("gosper", btn6, 20, textc);
+            drawCenteredText("pulsar", btn7, 20, textc);
+            drawCenteredText("pdthlon", btn8, 20, textc);
+            drawCenteredText("acorn", btn9, 20, textc);
+            drawCenteredText("rpento", btn10, 20, textc);
+            drawCenteredText("back", btn11, 20, textc);
             break;
             case stats:
-            DrawText(TextFormat("peak\npopulation: %d", peak), btnx-10, btn1.y, 20, textc);
-            if (livecells.empty()) DrawText("bounding box:\n0 x 0", btnx-10, btn2.y, 20, textc);
-            else DrawText(TextFormat("bounding box:\n%d x %d", maxx-minx+1, maxy-miny+1), btnx-10, btn2.y, 20, textc);
-            if(gen) DrawText(TextFormat("avg population: \n%d", total/gen), btnx-10, btn3.y, 20, textc);
-            else DrawText("avg population: \n0", btnx-10, btn3.y, 20, textc);
+            drawCenteredText(TextFormat("peak\npopulation: %d", peak), btn1, 20, textc);
+            if (livecells.empty()) drawCenteredText("bounding box:\n0 x 0", btn2, 20, textc);
+            else drawCenteredText(TextFormat("bounding box:\n%d x %d", maxx-minx+1, maxy-miny+1), btn2, 20, textc);
+            if(gen) drawCenteredText(TextFormat("avg population: \n%d", total/gen), btn3, 20, textc);
+            else drawCenteredText("avg population: \n0", btn3, 20, textc);
             if(populationGraph.size() > 1){
                 int maxPop = 1;
                 for(int p : populationGraph){
@@ -469,7 +479,7 @@ int main(){
             }
             if(buttonHover(btn11)) DrawRectangleRounded(btn11, 0.2f, 32, selc);
             else DrawRectangleRounded(btn11, 0.2f, 32, btnc);
-            DrawText("back", btn11.x+35, btn11.y+10, 20, textc);
+            drawCenteredText("back", btn11, 20, textc);
             break;
             case load:
             for(int i = 0; i < files.size(); i++){
@@ -477,24 +487,40 @@ int main(){
                 Color col = btnc;
                 if(buttonHover(btn)) col = selc;
                 DrawRectangleRounded(btn, 0.2f, 32, col);
-                DrawText(files[i].c_str(), btn.x+5, btn.y+10, 20, textc);
+                drawCenteredText(files[i].c_str(), btn, 20, textc);
             }
             if(buttonHover(btn11)) DrawRectangleRounded(btn11, 0.2f, 32, selc);
             else DrawRectangleRounded(btn11, 0.2f, 32, btnc);
-            DrawText("back", btn11.x+35, btn11.y+8, 20, textc);
+            drawCenteredText("back", btn11, 20, textc);
             break;
         }
 
         if(isPanelOpen){
-            DrawText(">", panelBtn.x+3, panelBtn.y, 20, textc);
+            drawCenteredText(">", panelBtn, 20, textc);
         }
         else{
-            DrawText("<", panelBtn.x+1, panelBtn.y, 20, textc);
+            drawCenteredText("<", panelBtn, 20, textc);
         }
 
         DrawText(TextFormat("generations: %d", gen), 10, 10, 20, textc);
         DrawText(TextFormat("live cells: %d", live), 10, 30, 20, textc);
         DrawText(TextFormat("speed: %.2fx", 1-interval), 10, 50, 20, textc);
+
+        if(toastTime > 0){
+            toastTime -= GetFrameTime();
+            if(toasty < 20){
+                animatePanel(toasty, true, 20, -45);
+            }
+            Rectangle r = {screenw/2-105, toasty, 210, 45};
+            DrawRectangleRounded(r, 0.2f, 16, btnc);
+            drawCenteredText(toast.c_str(), r, 20, textc);
+        }
+        else if(toastTime <= 0 &&  toasty > -45){
+            animatePanel(toasty, false, 20, -45);
+            Rectangle r = {screenw/2-105, toasty, 210, 45};
+            DrawRectangleRounded(r, 0.2f, 16, btnc);
+            drawCenteredText(toast.c_str(), r, 20, textc);
+        }
 
         EndDrawing();
 
@@ -627,6 +653,8 @@ int main(){
                             file << c.x << ' ' << c.y << endl;
                         }
                         file.close();
+                        toast = "saved!";
+                        toastTime = toastDuration;
                     }
                     else if(buttonClick(btn5)){
                         currPanel = load;
@@ -637,6 +665,8 @@ int main(){
                     else if(buttonClick(btn6)){
                         if(theme == &dark) theme = &light;
                         else theme = &dark;
+                        toast = "theme changed!";
+                        toastTime = toastDuration;
                     }
                     break;
                     case tools:
@@ -736,6 +766,8 @@ int main(){
                     for(int i = 0; i < files.size(); i++){
                         if(buttonClick(btns[i])){
                             loadFile("saves/"+files[i]);
+                            toast = "loaded!";
+                            toastTime = toastDuration;
                             break;
                         }
                     }
@@ -904,6 +936,8 @@ int main(){
             currTool = curr.currTool;
             currPattern = curr.currPattern;
             gen = 0;
+            toast = "undo";
+            toastTime = toastDuration;
         }
 
         if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_Y)){
@@ -915,10 +949,14 @@ int main(){
             currTool = curr.currTool;
             currPattern = curr.currPattern;
             gen = 0;
+            toast = "redo";
+            toastTime = toastDuration;
         }
 
         if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_C) && selDone){
             cell mid = formPattern(cop);
+            toast = "copied";
+            toastTime = toastDuration;
         }
 
         if((IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)) && IsKeyPressed(KEY_V)){
